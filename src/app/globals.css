@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #0f172a;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep content clear of the fixed bottom nav. */
+main {
+  padding-bottom: 5rem;
+}
+
+/* Prevent iOS zoom on focus for the amount field. */
+input {
+  font-size: 16px;
+}

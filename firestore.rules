@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// MVP access control — see ADR-0002 (ais repo).
+// Anonymous Auth gives every device a uid, so we require an authenticated
+// session (request.auth != null). Access is scoped to a single household
+// document; we deny `list` on the households collection so it cannot be
+// enumerated — a caller must already know the exact (unguessable) id.
+//
+// NOTE: this is deliberately obscurity-assisted. Any authenticated client
+// that knows the household id has full access. Tighten to a per-user member
+// allow-list when real sign-in lands (the ADR-0002 revisit trigger).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    match /households/{householdId} {
+      // Read/write a known household doc only when signed in.
+      // No `list`: enumeration of households is denied by omission.
+      allow get, write: if signedIn();
+
+      // Everything under a household inherits the same guard.
+      match /{document=**} {
+        allow read, write: if signedIn();
+      }
+    }
+  }
+}
