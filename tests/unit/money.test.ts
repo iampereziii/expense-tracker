@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
+import { formatPHP, parseAmount, roundCentavos, sanitizeAmountInput } from "@/lib/money";
 
 describe("money", () => {
   it("formats PHP with the peso sign and two decimals", () => {
@@ -14,6 +14,23 @@ describe("money", () => {
     expect(parseAmount("12.50")).toBe(12.5);
     expect(parseAmount("")).toBe(0);
     expect(parseAmount("abc")).toBe(0);
+  });
+
+  describe("roundCentavos", () => {
+    it("collapses binary-float noise to a clean centavo value", () => {
+      expect(roundCentavos(0.1 + 0.2)).toBe(0.3);
+      expect(roundCentavos(1666.6500000000003)).toBe(1666.65);
+    });
+
+    it("rounds half away from zero in both directions", () => {
+      expect(roundCentavos(2.675)).toBe(2.68);
+      expect(roundCentavos(-2.675)).toBe(-2.68);
+    });
+
+    it("treats non-finite values as zero rather than propagating NaN", () => {
+      expect(roundCentavos(Number.NaN)).toBe(0);
+      expect(roundCentavos(Number.POSITIVE_INFINITY)).toBe(0);
+    });
   });
 
   describe("sanitizeAmountInput", () => {

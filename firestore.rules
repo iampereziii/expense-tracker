@@ -21,7 +21,24 @@ service cloud.firestore {
       // No `list`: enumeration of households is denied by omission.
       allow get, write: if signedIn();
 
-      // Everything under a household inherits the same guard.
+      // Everything under a household inherits the same guard. This recursive wildcard
+      // already covers every subcollection, current and future:
+      //   categories/{id}                        periods/{id}
+      //   periods/{id}/expenses/{id}             periods/{id}/balances/{accountId}
+      //   accounts/{id}                          savingsPots/{id}
+      //   allocations/{periodId}_{potId}
+      //
+      // No per-collection blocks below it: rules are OR'd across every matching path,
+      // so a stricter nested match would be dead code that reads like enforcement.
+      //
+      // Two invariants are therefore held in `services/`, not here, and both need a
+      // cross-document read that rules can't do safely on the write path:
+      //   - cutoff snapshots are immutable once the next period is declared (would need
+      //     get() on the parent period, which fails inside the declaration batch since
+      //     the new period doc isn't committed yet)
+      //   - pot balances derive from the allocation ledger and are never stored
+      // Move both into rules when ADR-0002's real sign-in lands and per-member
+      // allow-lists replace this block.
       match /{document=**} {
         allow read, write: if signedIn();
       }

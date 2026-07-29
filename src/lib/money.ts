@@ -12,6 +12,20 @@ export function formatPHP(amount: number): string {
 }
 
 /**
+ * Round to whole centavos. Balances, income percentages and pot ledger sums all
+ * pass through here so repeated float arithmetic can't drift into ₱0.0000001 noise.
+ */
+export function roundCentavos(amount: number): number {
+  if (!Number.isFinite(amount)) return 0;
+  // Round the magnitude, then reapply the sign: Math.round breaks ties toward +∞, so
+  // signing afterwards is what makes a withdrawal round the same as the deposit it undoes.
+  const sign = amount < 0 ? -1 : 1;
+  const scaled = Math.abs(amount) * 100;
+  // Relative ε nudge so a value like 2.675 — stored as 2.67499… — still rounds up.
+  return (sign * Math.round(scaled + scaled * Number.EPSILON)) / 100;
+}
+
+/**
  * Sanitize free-typed amount input (native keyboard) into a canonical raw string:
  * digits only, at most one decimal point, at most two decimal places. Mirrors the
  * guard the on-screen keypad used to enforce key-by-key (see ADR-0003).

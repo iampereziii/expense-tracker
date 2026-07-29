@@ -6,22 +6,25 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/", label: "Log" },
   { href: "/periods", label: "Periods" },
+  { href: "/accounts", label: "Accounts" },
+  { href: "/savings", label: "Savings" },
   { href: "/categories", label: "Categories" },
   { href: "/report", label: "Report" },
 ] as const;
 
-/** Fixed bottom nav — reachable one-handed on a phone. */
+/** Fixed bottom nav — reachable one-handed on a phone. Six tabs is the ceiling at
+ *  375px; anything more needs a different pattern than an even grid. */
 export function NavBar() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-4 border-t border-slate-200 bg-white">
+    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white">
       {TABS.map((t) => {
         const active = t.href === "/" ? pathname === "/" : pathname.startsWith(t.href);
         return (
           <Link
             key={t.href}
             href={t.href}
-            className={`py-3 text-center text-xs font-medium ${
+            className={`py-3 text-center text-[10px] font-medium ${
               active ? "text-brand" : "text-slate-400"
             }`}
           >
