@@ -6,12 +6,11 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useActivePeriod } from "@/hooks/useActivePeriod";
 import { useCategories } from "@/hooks/useCategories";
 import { useExpenses } from "@/hooks/useExpenses";
-import { Keypad } from "@/components/input/Keypad";
 import { CategoryChips } from "@/components/input/CategoryChips";
 import { Button } from "@/components/ui/Button";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { addExpense } from "@/services/expenses";
-import { formatPHP, parseAmount } from "@/lib/money";
+import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
 
 export default function InputPage() {
   const { user, ready, configured, error } = useAuth();
@@ -41,16 +40,6 @@ export default function InputPage() {
   const amount = parseAmount(amountRaw);
   const remaining = period ? period.budgetAmount - total : 0;
   const canSave = enabled && !!period && !!categoryId && amount > 0 && !saving;
-
-  function handleKey(key: string) {
-    setAmountRaw((prev) => {
-      if (key === "←") return prev.slice(0, -1);
-      if (key === "." && prev.includes(".")) return prev;
-      // Cap to 2 decimal places.
-      if (prev.includes(".") && prev.split(".")[1]!.length >= 2 && key !== "←") return prev;
-      return prev + key;
-    });
-  }
 
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -143,7 +132,7 @@ export default function InputPage() {
           aria-label="Amount"
           placeholder="0"
           value={amountRaw}
-          onChange={(e) => setAmountRaw(e.target.value.replace(/[^0-9.]/g, ""))}
+          onChange={(e) => setAmountRaw(sanitizeAmountInput(e.target.value))}
           className="w-full bg-transparent text-center text-5xl font-bold tabular-nums outline-none"
         />
         <p className="mt-1 text-center text-sm text-slate-400">{formatPHP(amount)}</p>
@@ -154,7 +143,6 @@ export default function InputPage() {
       </div>
 
       <div className="mt-auto space-y-3 pb-4 pt-6">
-        <Keypad onKey={handleKey} />
         {saveError ? (
           <p className="text-center text-sm text-red-600">{saveError}</p>
         ) : null}

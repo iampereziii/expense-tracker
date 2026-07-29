@@ -12,7 +12,23 @@ export function formatPHP(amount: number): string {
 }
 
 /**
- * Parse raw keypad input (digits, optional single decimal) into a number.
+ * Sanitize free-typed amount input (native keyboard) into a canonical raw string:
+ * digits only, at most one decimal point, at most two decimal places. Mirrors the
+ * guard the on-screen keypad used to enforce key-by-key (see ADR-0003).
+ */
+export function sanitizeAmountInput(raw: string): string {
+  // Drop everything except digits and dots.
+  const cleaned = raw.replace(/[^0-9.]/g, "");
+  const dotIndex = cleaned.indexOf(".");
+  if (dotIndex === -1) return cleaned;
+  // Keep the first dot, drop any others, cap to two decimal places.
+  const whole = cleaned.slice(0, dotIndex);
+  const frac = cleaned.slice(dotIndex + 1).replace(/\./g, "").slice(0, 2);
+  return whole + "." + frac;
+}
+
+/**
+ * Parse raw amount input (digits, optional single decimal) into a number.
  * Returns 0 for empty/invalid input. Never throws — input must never block.
  */
 export function parseAmount(raw: string): number {
