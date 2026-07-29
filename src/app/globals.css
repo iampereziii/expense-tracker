@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Light only for now. Dark mode is a separate, separately-estimated line item
+ * (challenge finding #5) — it is a palette rewrite, not a config flag, so
+ * declaring `light dark` here before the tokens support it would ship a broken
+ * dark rendering to two live phones.
+ */
 :root {
   color-scheme: light;
 }
@@ -9,6 +15,7 @@
 html,
 body {
   margin: 0;
+  /* Mirrors surface.DEFAULT / ink.DEFAULT in tailwind.config.ts. */
   background: #ffffff;
   color: #0f172a;
   -webkit-tap-highlight-color: transparent;
@@ -19,7 +26,24 @@ main {
   padding-bottom: 5rem;
 }
 
-/* Prevent iOS zoom on focus for the amount field. */
+/* Prevent iOS zoom on focus for the amount field. This — not `maximumScale: 1`
+   — is what handles zoom-on-focus; the viewport pin failed SC 1.4.4. */
 input {
   font-size: 16px;
+}
+
+/*
+ * Honour a system request for less motion. The polish pass adds press states and
+ * colour transitions; this is the escape hatch, and it costs one media query.
+ * Components also carry `motion-reduce:` variants for their own transitions.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

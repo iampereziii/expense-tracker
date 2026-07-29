@@ -1,15 +1,18 @@
 import { test, expect } from "@playwright/test";
+import { firebaseSkipReason, hasFirebaseEnv } from "./_env";
 
 /**
  * The cutoff routine end to end: declare balances, close a period, and check that the
  * awareness math and the pot allocations both land — offline, then after a reconnect.
  *
- * Skipped for the same reason as offline-log.spec.ts: this needs a real Firebase project
- * plus NEXT_PUBLIC_HOUSEHOLD_ID, and it mutates period history, so it can't run against
- * the household's live data. Selectors are written against the shipped UI so it only
- * needs a seeded test household to become live.
+ * Gated for the same reason as offline-log.spec.ts: this needs a real Firebase project
+ * plus NEXT_PUBLIC_HOUSEHOLD_ID, and it mutates period history, so it must never run
+ * against the household's live data. Selectors are written against the shipped UI, so a
+ * seeded test household is all it needs — see `_env.ts`.
  */
-test.describe.skip("cutoff declaration and savings allocation", () => {
+test.describe("cutoff declaration and savings allocation", () => {
+  test.skip(!hasFirebaseEnv, firebaseSkipReason);
+
   test("freezes balances offline and reconciles on reconnect", async ({ page, context }) => {
     await page.goto("/accounts");
 

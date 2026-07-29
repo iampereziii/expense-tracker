@@ -8,11 +8,11 @@ export function SyncIndicator() {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-        online ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+        online ? "bg-ok-bg text-ok-fg" : "bg-warn-bg text-warn-fg"
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${online ? "bg-emerald-500" : "bg-amber-500"}`}
+        className={`h-1.5 w-1.5 rounded-full ${online ? "bg-ok-fg" : "bg-warn-fg"}`}
       />
       {online ? "Synced" : "Offline — saved locally"}
     </span>

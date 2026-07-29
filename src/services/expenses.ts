@@ -21,15 +21,31 @@ export function expensesQuery(periodId: string): Query {
 }
 
 /**
- * Log an expense against the active period (Rule 2). Succeeds instantly from
- * the local cache when offline; Firestore reconciles on reconnect (Rule 5).
+ * Log an expense against the active period (Rule 2).
+ *
+ * Deliberately NOT async: a Firestore write promise resolves only when the
+ * *server* acknowledges it, so awaiting it hangs indefinitely while offline —
+ * the exact case this app exists for. The document enters the local cache
+ * synchronously and the snapshot listener fires from cache immediately, so the
+ * running total updates with no round trip; Firestore replays the write on
+ * reconnect (Rule 5).
+ *
+ * Callers must not block the UI on this. `onError` reports a genuine rejection
+ * (rules, malformed data) without putting the network on the write path — being
+ * offline is not an error and will not call it.
  */
-export async function addExpense(periodId: string, expense: NewExpense): Promise<void> {
-  await addDoc(expensesCol(periodId), {
+export function addExpense(
+  periodId: string,
+  expense: NewExpense,
+  onError?: (error: unknown) => void,
+): void {
+  void addDoc(expensesCol(periodId), {
     amount: expense.amount,
     categoryId: expense.categoryId,
     date: expense.date ? Timestamp.fromDate(expense.date) : serverTimestamp(),
     note: expense.note?.trim() ?? null,
     createdAt: serverTimestamp(),
+  }).catch((error: unknown) => {
+    onError?.(error);
   });
 }

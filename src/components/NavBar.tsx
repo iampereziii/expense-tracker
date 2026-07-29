@@ -17,7 +17,7 @@ const TABS = [
 export function NavBar() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white">
+    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-surface pb-[env(safe-area-inset-bottom)]">
       {TABS.map((t) => {
         const active = t.href === "/" ? pathname === "/" : pathname.startsWith(t.href);
         return (
@@ -25,7 +25,7 @@ export function NavBar() {
             key={t.href}
             href={t.href}
             className={`py-3 text-center text-[10px] font-medium ${
-              active ? "text-brand" : "text-slate-400"
+              active ? "text-brand" : "text-ink-muted"
             }`}
           >
             {t.label}
