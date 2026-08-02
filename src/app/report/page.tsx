@@ -14,7 +14,7 @@ export default function ReportPage() {
   return (
     <section className="pt-16 text-center">
       <h1 className="text-lg font-semibold">Report</h1>
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-ink-muted">
         Parked for now. Spend-by-category and spend-vs-budget land here once the
         input routine has stuck.
       </p>

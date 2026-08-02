@@ -49,7 +49,7 @@ export default function CategoriesPage() {
           placeholder="New category"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-xl border border-slate-200 px-3 py-3 outline-none"
+          className="flex-1 rounded-xl border border-line px-3 py-3 outline-none"
         />
         <Button onClick={handleAdd} disabled={busy || !name.trim()}>
           Add
@@ -60,7 +60,7 @@ export default function CategoriesPage() {
         {categories.map((c) => (
           <li
             key={c.id}
-            className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"
+            className="flex items-center justify-between rounded-xl border border-line px-4 py-3"
           >
             <span className="flex items-center gap-2">
               <span

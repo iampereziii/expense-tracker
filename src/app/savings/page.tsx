@@ -102,24 +102,24 @@ export default function SavingsPage() {
   return (
     <section className="pt-6 pb-24">
       <h1 className="text-lg font-semibold">Savings</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-ink-muted">
         Pots split your real bank savings into goals — no actual transfers needed.
       </p>
 
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-400">Unallocated (main)</p>
+      <div className="mt-4 rounded-2xl bg-surface-sunken p-4">
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Unallocated (main)</p>
         <p
           className={`text-3xl font-bold tabular-nums ${
-            savingsMain < 0 ? "text-red-600" : "text-slate-900"
+            savingsMain < 0 ? "text-danger-fg" : "text-ink"
           }`}
         >
           {formatPHP(savingsMain)}
         </p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-ink-muted">
           {formatPHP(totals.bank)} in banks · {formatPHP(potTotal)} in pots
         </p>
         {savingsMain < 0 ? (
-          <p className="mt-2 text-xs text-red-600">
+          <p className="mt-2 text-xs text-danger-fg">
             Pots claim more than your banks hold — you&apos;re over-allocating.
           </p>
         ) : null}
@@ -132,7 +132,7 @@ export default function SavingsPage() {
           const others = pots.filter((other) => other.id !== pot.id);
 
           return (
-            <li key={pot.id} className="rounded-xl border border-slate-100 px-4 py-3">
+            <li key={pot.id} className="rounded-xl border border-line px-4 py-3">
               <button
                 onClick={() => togglePot(pot.id)}
                 aria-expanded={expanded}
@@ -140,7 +140,7 @@ export default function SavingsPage() {
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{pot.name}</span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-ink-muted">
                     {pot.incomePercent ? `${pot.incomePercent}% of income` : "Manual"}
                   </span>
                 </span>
@@ -150,7 +150,7 @@ export default function SavingsPage() {
               </button>
 
               {expanded ? (
-                <div className="mt-3 space-y-3 border-t border-slate-100 pt-3">
+                <div className="mt-3 space-y-3 border-t border-line pt-3">
                   <div className="flex gap-2">
                     <AmountField
                       label={`Amount for ${pot.name}`}
@@ -179,7 +179,7 @@ export default function SavingsPage() {
                         aria-label={`Move from ${pot.name} to`}
                         value={moveTargetId}
                         onChange={(e) => setMoveTargetId(e.target.value)}
-                        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none"
+                        className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 text-sm outline-none"
                       >
                         <option value="">Move to…</option>
                         {others.map((other) => (
@@ -202,7 +202,7 @@ export default function SavingsPage() {
                   {history.length > 0 ? (
                     <ul className="space-y-1">
                       {history.map((entry) => (
-                        <li key={entry.id} className="flex justify-between text-xs text-slate-400">
+                        <li key={entry.id} className="flex justify-between text-xs text-ink-muted">
                           <span className="min-w-0 truncate">{historyLabel(entry)}</span>
                           <span className="shrink-0 tabular-nums">
                             {entry.amount > 0 ? "+" : ""}
@@ -212,7 +212,7 @@ export default function SavingsPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-slate-400">Nothing in this pot yet.</p>
+                    <p className="text-xs text-ink-muted">Nothing in this pot yet.</p>
                   )}
 
                   <div className="flex gap-2">
@@ -246,18 +246,18 @@ export default function SavingsPage() {
       </ul>
 
       {pots.length === 0 ? (
-        <p className="mt-6 text-sm text-slate-400">
+        <p className="mt-6 text-sm text-ink-muted">
           No pots yet. Add one, give it a percentage, and it fills itself each period.
         </p>
       ) : null}
 
-      <div className="mt-8 space-y-3 rounded-2xl bg-slate-50 p-4">
+      <div className="mt-8 space-y-3 rounded-2xl bg-surface-sunken p-4">
         <p className="text-sm font-medium">New pot</p>
         <input
           placeholder="Pot name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 px-3 py-3 outline-none"
+          className="w-full rounded-xl border border-line px-3 py-3 outline-none"
         />
         <input
           inputMode="decimal"
@@ -265,7 +265,7 @@ export default function SavingsPage() {
           placeholder="% of income (optional)"
           value={percent}
           onChange={(e) => setPercent(e.target.value.replace(/[^0-9.]/g, ""))}
-          className="w-full rounded-xl border border-slate-200 px-3 py-3 outline-none"
+          className="w-full rounded-xl border border-line px-3 py-3 outline-none"
         />
         <Button onClick={handleAddPot} disabled={busy || !name.trim()} className="w-full">
           Add pot

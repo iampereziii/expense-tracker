@@ -76,25 +76,25 @@ export default function AccountsPage() {
   return (
     <section className="pt-6 pb-24">
       <h1 className="text-lg font-semibold">Accounts</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-ink-muted">
         Where your money actually sits. Tap a balance to update it anytime.
       </p>
 
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-400">Total savings</p>
+      <div className="mt-4 rounded-2xl bg-surface-sunken p-4">
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Total savings</p>
         <p className="text-3xl font-bold tabular-nums">{formatPHP(totals.total)}</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-ink-muted">
           {formatPHP(totals.bank)} in banks · {formatPHP(totals.investment)} invested
         </p>
       </div>
 
       <ul className="mt-6 space-y-2">
         {accounts.map((account) => (
-          <li key={account.id} className="rounded-xl border border-slate-100 px-4 py-3">
+          <li key={account.id} className="rounded-xl border border-line px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-medium">{account.name}</p>
-                <p className="text-xs text-slate-400">{TYPE_LABEL[account.type]}</p>
+                <p className="text-xs text-ink-muted">{TYPE_LABEL[account.type]}</p>
               </div>
               {editingId === account.id ? (
                 <span className="flex shrink-0 items-center gap-2">
@@ -112,7 +112,7 @@ export default function AccountsPage() {
                 <button
                   onClick={() => startEdit(account)}
                   aria-label={`Edit balance for ${account.name}`}
-                  className="shrink-0 rounded-lg px-2 py-1 text-right text-lg font-semibold tabular-nums active:bg-slate-100"
+                  className="shrink-0 rounded-lg px-2 py-1 text-right text-lg font-semibold tabular-nums active:bg-line"
                 >
                   {formatPHP(account.balance)}
                 </button>
@@ -139,18 +139,18 @@ export default function AccountsPage() {
       </ul>
 
       {accounts.length === 0 ? (
-        <p className="mt-6 text-sm text-slate-400">
+        <p className="mt-6 text-sm text-ink-muted">
           No accounts yet. Add each bank or investment you keep money in.
         </p>
       ) : null}
 
-      <div className="mt-8 space-y-3 rounded-2xl bg-slate-50 p-4">
+      <div className="mt-8 space-y-3 rounded-2xl bg-surface-sunken p-4">
         <p className="text-sm font-medium">New account</p>
         <input
           placeholder="Account name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 px-3 py-3 outline-none"
+          className="w-full rounded-xl border border-line px-3 py-3 outline-none"
         />
         <div className="flex gap-2">
           {(["bank", "investment"] as const).map((option) => (

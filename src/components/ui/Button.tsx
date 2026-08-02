@@ -5,9 +5,9 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 type Variant = "primary" | "ghost" | "danger";
 
 const styles: Record<Variant, string> = {
-  primary: "bg-brand text-white active:bg-brand-dark",
-  ghost: "bg-surface-sunken text-ink active:bg-slate-200",
-  danger: "bg-red-100 text-red-800 active:bg-red-200",
+  primary: "bg-brand text-brand-contrast active:bg-brand-dark",
+  ghost: "bg-surface-sunken text-ink active:bg-line",
+  danger: "bg-danger-bg text-danger-fg active:opacity-80",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

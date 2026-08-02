@@ -116,7 +116,7 @@ export default function InputPage() {
         <div>
           <p className="text-xs uppercase tracking-wide text-ink-muted">Remaining</p>
           <p
-            className={`text-2xl font-bold ${remaining < 0 ? "text-red-700" : "text-ink"}`}
+            className={`text-2xl font-bold ${remaining < 0 ? "text-danger-fg" : "text-ink"}`}
           >
             {formatPHP(remaining)}
           </p>
@@ -149,7 +149,7 @@ export default function InputPage() {
 
       <div className="mt-auto space-y-3 pb-4 pt-6">
         {saveError ? (
-          <p className="text-center text-sm text-red-700">{saveError}</p>
+          <p className="text-center text-sm text-danger-fg">{saveError}</p>
         ) : null}
         <Button onClick={handleSave} disabled={!canSave} className="w-full py-4 text-lg">
           Save
