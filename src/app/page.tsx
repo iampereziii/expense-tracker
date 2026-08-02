@@ -12,6 +12,12 @@ import { SyncIndicator } from "@/components/SyncIndicator";
 import { addExpense, deleteExpense } from "@/services/expenses";
 import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
 
+interface LastLogged {
+  id: string;
+  amount: number;
+  categoryName: string;
+}
+
 export default function InputPage() {
   const { user, ready, configured, error } = useAuth();
   // Only query once we actually have an authenticated (anonymous) user —
@@ -25,12 +31,6 @@ export default function InputPage() {
   const [amountRaw, setAmountRaw] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
-
-  interface LastLogged {
-    id: string;
-    amount: number;
-    categoryName: string;
-  }
 
   const [lastLogged, setLastLogged] = useState<LastLogged | null>(null);
   const [justSaved, setJustSaved] = useState(false);
