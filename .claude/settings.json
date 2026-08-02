@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/local-instance/ais/docs/decisions/**)",
+      "Skill(whats-next)",
+      "Skill(whats-next:*)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\plugins\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\plugins\\\\marketplaces\" -ErrorAction SilentlyContinue | Select-Object Name)",
+      "PowerShell(Get-Content \"$env:USERPROFILE\\\\.claude\\\\plugins\\\\installed_plugins.json\"; Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\plugins\\\\cache\" -Recurse -Depth 1 -ErrorAction SilentlyContinue | Select-Object FullName -First 20)",
+      "PowerShell(git checkout -b chore/mobile-ui-redesign-spec)",
+      "PowerShell(git add docs/superpowers/specs/2026-08-03-mobile-ui-redesign-design.md)",
+      "PowerShell(Get-ChildItem \"$env:USERPROFILE\\\\.claude\\\\skills\", \"$env:USERPROFILE\\\\.claude\\\\plugins\" -ErrorAction SilentlyContinue | Select-Object FullName)"
+    ]
+  }
+}
