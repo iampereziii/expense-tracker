@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
 import { Card } from "@/components/ui/Card";
+import { MoneySwitch } from "@/components/MoneySwitch";
 import { formatPHP, parseAmount } from "@/lib/money";
 import type { Account, AccountType } from "@/types";
 
@@ -76,6 +77,7 @@ export default function AccountsPage() {
 
   return (
     <section className="pt-6 pb-24">
+      <MoneySwitch />
       <h1 className="text-lg font-semibold">Accounts</h1>
       <p className="mt-1 text-sm text-ink-muted">
         Where your money actually sits. Tap a balance to update it anytime.

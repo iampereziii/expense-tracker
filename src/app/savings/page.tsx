@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
 import { Card } from "@/components/ui/Card";
+import { MoneySwitch } from "@/components/MoneySwitch";
 import { formatPHP, parseAmount } from "@/lib/money";
 import { derivedSavingsMain } from "@/lib/savings";
 import type { Allocation, SavingsPot } from "@/types";
@@ -102,6 +103,7 @@ export default function SavingsPage() {
 
   return (
     <section className="pt-6 pb-24">
+      <MoneySwitch />
       <h1 className="text-lg font-semibold">Savings</h1>
       <p className="mt-1 text-sm text-ink-muted">
         Pots split your real bank savings into goals — no actual transfers needed.
