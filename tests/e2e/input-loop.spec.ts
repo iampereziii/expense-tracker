@@ -51,4 +51,9 @@ test.describe("fast expense input", () => {
     // Derived from the cache listener, so it updates with no round trip.
     await expect(spent).not.toHaveText(before ?? "");
   });
+
+  test("shows budget progress under the header", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("budget-progress")).toBeVisible();
+  });
 });

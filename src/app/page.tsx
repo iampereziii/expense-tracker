@@ -105,6 +105,9 @@ export default function InputPage() {
     );
   }
 
+  const spentFraction =
+    period && period.budgetAmount > 0 ? Math.min(total / period.budgetAmount, 1) : 0;
+
   return (
     // `dvh`, not `vh`: with the native keyboard open (ADR-0003) a `100vh` box
     // keeps its full height, so `mt-auto` pushes Save down behind the keyboard.
@@ -129,6 +132,22 @@ export default function InputPage() {
         </div>
       </header>
 
+      {/* Spent-of-budget at a glance — width animates, motion-reduce kills it. */}
+      <div
+        data-testid="budget-progress"
+        className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
+        role="progressbar"
+        aria-label="Budget used"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(spentFraction * 100)}
+      >
+        <div
+          className="h-full rounded-full bg-brand transition-[width] duration-200 motion-reduce:transition-none"
+          style={{ width: `${spentFraction * 100}%` }}
+        />
+      </div>
+
       {/* Amount display — pre-focused, accepts the device keyboard too. */}
       <div className="mt-6">
         <input
@@ -138,7 +157,7 @@ export default function InputPage() {
           placeholder="0"
           value={amountRaw}
           onChange={(e) => setAmountRaw(sanitizeAmountInput(e.target.value))}
-          className="w-full bg-transparent text-center text-5xl font-bold tabular-nums outline-none"
+          className="w-full bg-transparent text-center text-6xl tracking-tight font-bold tabular-nums outline-none"
         />
         <p className="mt-1 text-center text-sm text-ink-muted">{formatPHP(amount)}</p>
       </div>
