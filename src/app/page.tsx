@@ -9,7 +9,7 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { CategoryChips } from "@/components/input/CategoryChips";
 import { Button } from "@/components/ui/Button";
 import { SyncIndicator } from "@/components/SyncIndicator";
-import { addExpense } from "@/services/expenses";
+import { addExpense, deleteExpense } from "@/services/expenses";
 import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
 
 export default function InputPage() {
@@ -26,10 +26,30 @@ export default function InputPage() {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
 
+  interface LastLogged {
+    id: string;
+    amount: number;
+    categoryName: string;
+  }
+
+  const [lastLogged, setLastLogged] = useState<LastLogged | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Pre-focus the amount field on open — no tap needed to start typing (Rule 1).
   useEffect(() => {
     amountRef.current?.focus();
   }, [enabled]);
+
+  // Clean up auto-dismiss timers on unmount.
+  useEffect(() => {
+    return () => {
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   // Default to the first category so a log can be one tap + a number.
   useEffect(() => {
@@ -52,11 +72,30 @@ export default function InputPage() {
   function handleSave() {
     if (!canSave || !period || !categoryId) return;
     setSaveError(null);
-    addExpense(period.id, { amount, categoryId }, () =>
+    const id = addExpense(period.id, { amount, categoryId }, () =>
       setSaveError("Couldn't sync that one — check Categories and try again."),
     );
+    const categoryName = categories.find((c) => c.id === categoryId)?.name ?? "";
+    setLastLogged({ id, amount, categoryName });
+
+    if ("vibrate" in navigator) navigator.vibrate(12);
+    setJustSaved(true);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setJustSaved(false), 900);
+    setToastOpen(true);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastOpen(false), 3000);
+
     setAmountRaw("");
     amountRef.current?.focus();
+  }
+
+  /** Fire-and-forget like the save — never awaited (Global Constraints). */
+  function handleUndo() {
+    if (!lastLogged || !period) return;
+    deleteExpense(period.id, lastLogged.id);
+    setLastLogged(null);
+    setToastOpen(false);
   }
 
   if (!configured) {
@@ -148,6 +187,28 @@ export default function InputPage() {
         />
       </div>
 
+      {/* Last-logged row — appears after every save so the user can undo instantly. */}
+      {lastLogged ? (
+        <div
+          data-testid="last-logged"
+          className="mt-3 flex items-center justify-between rounded-xl bg-surface px-3 py-2 shadow-sm"
+        >
+          <p className="text-xs text-ink-muted">
+            Last:{" "}
+            <span className="font-semibold text-ink">
+              {formatPHP(lastLogged.amount)} · {lastLogged.categoryName}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={handleUndo}
+            className="text-xs font-bold text-brand"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
+
       {/* Amount display — pre-focused, accepts the device keyboard too. */}
       <div className="mt-6">
         <input
@@ -171,9 +232,24 @@ export default function InputPage() {
           <p className="text-center text-sm text-danger-fg">{saveError}</p>
         ) : null}
         <Button onClick={handleSave} disabled={!canSave} className="w-full py-4 text-lg">
-          Save
+          {justSaved ? "Saved ✓" : "Save"}
         </Button>
       </div>
+
+      {/* Undo toast — fixed above nav, self-dismisses after 3 s. bg-ink inverts per theme. */}
+      {toastOpen && lastLogged ? (
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-24 z-20 flex items-center justify-between rounded-xl bg-ink px-4 py-3 text-sm text-surface shadow-lg"
+        >
+          <span>
+            Logged {formatPHP(lastLogged.amount)} · {lastLogged.categoryName}
+          </span>
+          <button type="button" onClick={handleUndo} className="font-bold underline">
+            Undo
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
