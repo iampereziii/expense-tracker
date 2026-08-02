@@ -18,7 +18,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({ variant = "primary", className = "", children, ...rest }: ButtonProps) {
   return (
     <button
-      className={`rounded-xl px-4 py-3 text-base font-semibold transition-colors motion-reduce:transition-none disabled:opacity-40 ${styles[variant]} ${className}`}
+      className={`rounded-[18px] px-4 py-3 text-base font-semibold transition-colors motion-reduce:transition-none disabled:opacity-40 ${styles[variant]} ${className}`}
       {...rest}
     >
       {children}
