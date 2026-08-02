@@ -58,6 +58,11 @@ test.describe("app shell at the specified breakpoint", () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 1);
   });
 
+  test("the active nav tab carries aria-current", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("nav a[aria-current='page']")).toHaveCount(1);
+  });
+
   for (const route of ROUTES) {
     test(`${route} does not scroll horizontally`, async ({ page }) => {
       await page.goto(route);
