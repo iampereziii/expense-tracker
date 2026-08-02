@@ -89,7 +89,7 @@ export default function PeriodsPage() {
         balances as that cutoff.
       </p>
 
-      <Card className="mt-4 bg-surface-sunken space-y-3">
+      <Card tone="sunken" className="mt-4 space-y-3">
         <AmountField
           label="Budget amount"
           placeholder="Budget amount"

@@ -45,7 +45,7 @@ export default function CategoriesPage() {
     <section className="pt-6">
       <h1 className="text-lg font-semibold">Categories</h1>
 
-      <Card className="mt-4 bg-surface-sunken">
+      <Card tone="sunken" className="mt-4">
         <div className="flex gap-2">
           <input
             placeholder="New category"

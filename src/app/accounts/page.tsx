@@ -83,7 +83,7 @@ export default function AccountsPage() {
         Where your money actually sits. Tap a balance to update it anytime.
       </p>
 
-      <Card className="mt-4 bg-surface-sunken">
+      <Card tone="sunken" className="mt-4">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Total savings</p>
         <p className="text-3xl font-bold tabular-nums">{formatPHP(totals.total)}</p>
         <p className="mt-1 text-xs text-ink-muted">
@@ -148,7 +148,7 @@ export default function AccountsPage() {
         ) : null}
       </Card>
 
-      <Card className="mt-3 bg-surface-sunken space-y-3">
+      <Card tone="sunken" className="mt-3 space-y-3">
         <p className="text-sm font-medium">New account</p>
         <input
           placeholder="Account name"

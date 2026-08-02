@@ -109,7 +109,7 @@ export default function SavingsPage() {
         Pots split your real bank savings into goals — no actual transfers needed.
       </p>
 
-      <Card className="mt-4 bg-surface-sunken">
+      <Card tone="sunken" className="mt-4">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Unallocated (main)</p>
         <p
           className={`text-3xl font-bold tabular-nums ${
@@ -255,7 +255,7 @@ export default function SavingsPage() {
         ) : null}
       </Card>
 
-      <Card className="mt-3 bg-surface-sunken space-y-3">
+      <Card tone="sunken" className="mt-3 space-y-3">
         <p className="text-sm font-medium">New pot</p>
         <input
           placeholder="Pot name"
