@@ -3,21 +3,56 @@
 @tailwind utilities;
 
 /*
- * Light only for now. Dark mode is a separate, separately-estimated line item
- * (challenge finding #5) — it is a palette rewrite, not a config flag, so
- * declaring `light dark` here before the tokens support it would ship a broken
- * dark rendering to two live phones.
+ * Both palettes live in src/lib/tokens.ts; tests/unit/tokens.test.ts fails if
+ * these values drift from it. Dark simply follows the phone setting — there is
+ * deliberately no toggle UI (spec: 2026 redesign, Section 1).
  */
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
+  --brand: #15803d;
+  --brand-dark: #166534;
+  --brand-contrast: #ffffff;
+  --brand-soft: #d7ead9;
+  --ink: #122018;
+  --ink-muted: #47604f;
+  --surface: #ffffff;
+  --surface-sunken: #e7ede4;
+  --surface-ground: #f3f6f1;
+  --line: #dde5da;
+  --ok-fg: #065f46;
+  --ok-bg: #ecfdf5;
+  --warn-fg: #92400e;
+  --warn-bg: #fffbeb;
+  --danger-fg: #b91c1c;
+  --danger-bg: #fee2e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #4ade80;
+    --brand-dark: #22c55e;
+    --brand-contrast: #052e16;
+    --brand-soft: #1d3a29;
+    --ink: #e8f0ea;
+    --ink-muted: #9fb3a6;
+    --surface: #182420;
+    --surface-sunken: #1f2d26;
+    --surface-ground: #0f1712;
+    --line: #243029;
+    --ok-fg: #6ee7b7;
+    --ok-bg: #0b2e23;
+    --warn-fg: #fbbf24;
+    --warn-bg: #2e2308;
+    --danger-fg: #fca5a5;
+    --danger-bg: #3f1d1d;
+  }
 }
 
 html,
 body {
   margin: 0;
-  /* Mirrors surface.DEFAULT / ink.DEFAULT in tailwind.config.ts. */
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--surface-ground);
+  color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
 

@@ -36,43 +36,44 @@ export function AwarenessCard({ closedPeriod, nextPeriodId }: AwarenessCardProps
   const awareness = computeAwareness({ previous, current, incomeAmount: income, loggedExpenses });
 
   return (
-    <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">Last period</p>
+    <div>
+      <p className="text-xs uppercase tracking-wide text-ink-muted">Last period</p>
 
       <p
         className={`mt-1 text-2xl font-bold tabular-nums ${
-          awareness.savingsChange < 0 ? "text-red-600" : "text-emerald-600"
+          awareness.savingsChange < 0 ? "text-danger-fg" : "text-ok-fg"
         }`}
       >
         {signed(awareness.savingsChange)}
       </p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-muted">
         saved · {formatPHP(previous.total)} → {formatPHP(current.total)}
       </p>
 
       <dl className="mt-4 space-y-1.5 text-sm">
         <div className="flex justify-between">
-          <dt className="text-slate-500">Income declared</dt>
+          <dt className="text-ink-muted">Income declared</dt>
           <dd className="tabular-nums">{income > 0 ? formatPHP(income) : "—"}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-slate-500">Expenses logged</dt>
+          <dt className="text-ink-muted">Expenses logged</dt>
           <dd className="tabular-nums">{formatPHP(loggedExpenses)}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-slate-500">Bank change</dt>
+          <dt className="text-ink-muted">Bank change</dt>
           <dd className="tabular-nums">{signed(awareness.bankChange)}</dd>
         </div>
         {/* Investments move with the market, so they sit outside the gap math entirely. */}
         <div className="flex justify-between">
-          <dt className="text-slate-500">Investments</dt>
+          <dt className="text-ink-muted">Investments</dt>
           <dd className="tabular-nums">{signed(awareness.investmentChange)}</dd>
         </div>
       </dl>
 
-      <p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-500">
+      <p className="mt-3 border-t border-line pt-3 text-sm text-ink-muted">
         {describeGap(awareness.gap)}
       </p>
     </div>
   );
 }
+

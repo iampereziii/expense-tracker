@@ -1,8 +1,10 @@
 import {
   collection,
+  doc,
   query,
   orderBy,
-  addDoc,
+  setDoc,
+  deleteDoc,
   serverTimestamp,
   Timestamp,
   type CollectionReference,
@@ -23,29 +25,40 @@ export function expensesQuery(periodId: string): Query {
 /**
  * Log an expense against the active period (Rule 2).
  *
- * Deliberately NOT async: a Firestore write promise resolves only when the
- * *server* acknowledges it, so awaiting it hangs indefinitely while offline —
- * the exact case this app exists for. The document enters the local cache
- * synchronously and the snapshot listener fires from cache immediately, so the
- * running total updates with no round trip; Firestore replays the write on
- * reconnect (Rule 5).
- *
- * Callers must not block the UI on this. `onError` reports a genuine rejection
- * (rules, malformed data) without putting the network on the write path — being
- * offline is not an error and will not call it.
+ * Deliberately NOT async (see original rationale — offline writes must not
+ * block). Uses a pre-generated ref + setDoc instead of addDoc so the caller
+ * gets the id back synchronously; the undo path needs it before the network
+ * ever answers.
  */
 export function addExpense(
   periodId: string,
   expense: NewExpense,
   onError?: (error: unknown) => void,
-): void {
-  void addDoc(expensesCol(periodId), {
+): string {
+  const ref = doc(expensesCol(periodId));
+  void setDoc(ref, {
     amount: expense.amount,
     categoryId: expense.categoryId,
     date: expense.date ? Timestamp.fromDate(expense.date) : serverTimestamp(),
     note: expense.note?.trim() ?? null,
     createdAt: serverTimestamp(),
   }).catch((error: unknown) => {
+    onError?.(error);
+  });
+  return ref.id;
+}
+
+/**
+ * Undo a just-logged expense. Hard delete is safe here — nothing references an
+ * expense doc (the archive requirement covers categories/accounts/pots, which
+ * ARE referenced). Same fire-and-forget contract as addExpense.
+ */
+export function deleteExpense(
+  periodId: string,
+  expenseId: string,
+  onError?: (error: unknown) => void,
+): void {
+  void deleteDoc(doc(expensesCol(periodId), expenseId)).catch((error: unknown) => {
     onError?.(error);
   });
 }

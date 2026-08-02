@@ -9,6 +9,7 @@ import { allPeriodsQuery, declarePeriod } from "@/services/periods";
 import type { SnapshotInput } from "@/services/balances";
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
+import { Card } from "@/components/ui/Card";
 import { AwarenessCard } from "@/components/AwarenessCard";
 import { SnapshotEditor } from "@/components/SnapshotEditor";
 import { formatPHP, parseAmount } from "@/lib/money";
@@ -83,12 +84,12 @@ export default function PeriodsPage() {
   return (
     <section className="pt-6 pb-24">
       <h1 className="text-lg font-semibold">Budget periods</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-ink-muted">
         Start a new period when income lands. It closes the previous one and freezes your
         balances as that cutoff.
       </p>
 
-      <div className="mt-4 space-y-3 rounded-2xl bg-slate-50 p-4">
+      <Card tone="sunken" className="mt-4 space-y-3">
         <AmountField
           label="Budget amount"
           placeholder="Budget amount"
@@ -107,20 +108,20 @@ export default function PeriodsPage() {
           placeholder="Income note (optional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 px-3 py-3 outline-none"
+          className="w-full rounded-xl border border-line px-3 py-3 outline-none"
         />
 
         {/* Balance review — pre-filled from the live balances, so a cutoff with nothing
             to change is still a single tap. Skippable: no accounts, no step. */}
         {accounts.length > 0 ? (
-          <div className="rounded-xl bg-white p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+          <div className="rounded-xl bg-surface p-3">
+            <p className="text-xs uppercase tracking-wide text-ink-muted">
               Balances at this cutoff
             </p>
             <ul className="mt-2 space-y-2">
               {accounts.map((account) => (
                 <li key={account.id} className="flex items-center justify-between gap-3">
-                  <span className="min-w-0 truncate text-sm text-slate-600">
+                  <span className="min-w-0 truncate text-sm text-ink-muted">
                     {account.name}
                   </span>
                   <AmountField
@@ -139,14 +140,14 @@ export default function PeriodsPage() {
 
         {/* What the pots' percentage rules will take from this income, before committing. */}
         {planned.length > 0 ? (
-          <div className="rounded-xl bg-white p-3">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+          <div className="rounded-xl bg-surface p-3">
+            <p className="text-xs uppercase tracking-wide text-ink-muted">
               Savings allocations
             </p>
             <ul className="mt-2 space-y-1">
               {planned.map(({ pot, amount }) => (
                 <li key={pot.id} className="flex justify-between text-sm">
-                  <span className="text-slate-600">
+                  <span className="text-ink-muted">
                     {pot.name} · {pot.incomePercent}%
                   </span>
                   <span className="tabular-nums">{formatPHP(amount)}</span>
@@ -156,46 +157,54 @@ export default function PeriodsPage() {
           </div>
         ) : null}
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-danger-fg">{error}</p> : null}
         <Button onClick={handleDeclare} disabled={busy || !budget} className="w-full">
           {busy ? "Starting…" : "Start new period"}
         </Button>
-      </div>
+      </Card>
 
       {lastClosed ? (
-        <AwarenessCard closedPeriod={lastClosed} nextPeriodId={periods[0]!.id} />
+        <Card className="mt-3 border border-line">
+          <AwarenessCard closedPeriod={lastClosed} nextPeriodId={periods[0]!.id} />
+        </Card>
       ) : null}
 
-      {activePeriod ? <SnapshotEditor periodId={activePeriod.id} uid={user?.uid ?? null} /> : null}
+      {activePeriod ? (
+        <Card className="mt-3 border border-line">
+          <SnapshotEditor periodId={activePeriod.id} uid={user?.uid ?? null} />
+        </Card>
+      ) : null}
 
-      <ul className="mt-6 space-y-2">
-        {periods.map((period) => {
-          const open = period.endDate === null;
-          return (
-            <li
-              key={period.id}
-              className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"
-            >
-              <div>
-                <p className="font-medium">{formatPHP(period.budgetAmount)}</p>
-                <p className="text-xs text-slate-400">
-                  {period.incomeAmount
-                    ? `${formatPHP(period.incomeAmount)} income`
-                    : "No income declared"}
-                  {period.incomeNote ? ` · ${period.incomeNote}` : ""}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  open ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
-                }`}
+      <Card className="mt-3">
+        <ul className="divide-y divide-line">
+          {periods.map((period) => {
+            const open = period.endDate === null;
+            return (
+              <li
+                key={period.id}
+                className="flex items-center justify-between px-0 py-3 first:pt-0 last:pb-0"
               >
-                {open ? "Active" : "Closed"}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <div>
+                  <p className="font-medium">{formatPHP(period.budgetAmount)}</p>
+                  <p className="text-xs text-ink-muted">
+                    {period.incomeAmount
+                      ? `${formatPHP(period.incomeAmount)} income`
+                      : "No income declared"}
+                    {period.incomeNote ? ` · ${period.incomeNote}` : ""}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    open ? "bg-ok-bg text-ok-fg" : "bg-surface-sunken text-ink-muted"
+                  }`}
+                >
+                  {open ? "Active" : "Closed"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
     </section>
   );
 }

@@ -28,7 +28,7 @@ export function AmountField({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(sanitizeAmountInput(e.target.value))}
-      className={`rounded-xl border border-slate-200 px-3 py-3 tabular-nums outline-none ${className}`}
+      className={`rounded-xl border border-line px-3 py-3 tabular-nums outline-none ${className}`}
     />
   );
 }

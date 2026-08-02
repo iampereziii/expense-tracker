@@ -15,14 +15,27 @@ import { test, expect } from "@playwright/test";
  */
 const AA_TARGET_MIN_PX = 24;
 
-const ROUTES = ["/", "/periods", "/accounts", "/savings", "/categories", "/report"] as const;
+/** All navigable routes — used for horizontal-scroll regression. Includes deep-linked
+ *  pages (/savings, /categories, /report) that aren't nav targets but must not scroll. */
+const ROUTES = [
+  "/",
+  "/periods",
+  "/accounts",
+  "/savings",
+  "/categories",
+  "/report",
+  "/more",
+] as const;
+
+/** Number of anchors rendered in the bottom nav (Log / Budget / Money / More). */
+const NAV_TAB_COUNT = 4;
 
 test.describe("app shell at the specified breakpoint", () => {
   test("bottom nav exposes every route with AA-sized targets", async ({ page }) => {
     await page.goto("/");
 
     const tabs = page.locator("nav a");
-    await expect(tabs).toHaveCount(ROUTES.length);
+    await expect(tabs).toHaveCount(NAV_TAB_COUNT);
 
     for (const tab of await tabs.all()) {
       const box = await tab.boundingBox();
@@ -43,6 +56,11 @@ test.describe("app shell at the specified breakpoint", () => {
     expect(box).not.toBeNull();
     // Fixed to the bottom edge — the whole point of the pattern.
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 1);
+  });
+
+  test("the active nav tab carries aria-current", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("nav a[aria-current='page']")).toHaveCount(1);
   });
 
   for (const route of ROUTES) {

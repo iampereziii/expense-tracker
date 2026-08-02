@@ -36,16 +36,16 @@ export function SnapshotEditor({ periodId, uid }: SnapshotEditorProps) {
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-slate-100 p-4">
+    <div>
       <p className="text-sm font-medium">Balances at this cutoff</p>
-      <p className="mt-0.5 text-xs text-slate-400">
+      <p className="mt-0.5 text-xs text-ink-muted">
         {formatPHP(totals.total)} frozen · correctable until the next period starts
       </p>
 
       <ul className="mt-3 space-y-1">
         {snapshots.map((snapshot) => (
           <li key={snapshot.id} className="flex items-center justify-between gap-3 py-1">
-            <span className="min-w-0 truncate text-sm text-slate-600">{snapshot.name}</span>
+            <span className="min-w-0 truncate text-sm text-ink-muted">{snapshot.name}</span>
             {editingId === snapshot.id ? (
               <span className="flex shrink-0 items-center gap-2">
                 <AmountField
@@ -62,7 +62,7 @@ export function SnapshotEditor({ periodId, uid }: SnapshotEditorProps) {
               <button
                 onClick={() => startEdit(snapshot)}
                 aria-label={`Correct ${snapshot.name}`}
-                className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium tabular-nums active:bg-slate-100"
+                className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium tabular-nums active:bg-line"
               >
                 {formatPHP(snapshot.balance)}
               </button>

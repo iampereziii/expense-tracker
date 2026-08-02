@@ -9,8 +9,14 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { CategoryChips } from "@/components/input/CategoryChips";
 import { Button } from "@/components/ui/Button";
 import { SyncIndicator } from "@/components/SyncIndicator";
-import { addExpense } from "@/services/expenses";
+import { addExpense, deleteExpense } from "@/services/expenses";
 import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
+
+interface LastLogged {
+  id: string;
+  amount: number;
+  categoryName: string;
+}
 
 export default function InputPage() {
   const { user, ready, configured, error } = useAuth();
@@ -26,10 +32,21 @@ export default function InputPage() {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
 
+  const [lastLogged, setLastLogged] = useState<LastLogged | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Pre-focus the amount field on open — no tap needed to start typing (Rule 1).
   useEffect(() => {
     amountRef.current?.focus();
   }, [enabled]);
+
+  // Clean up auto-dismiss timers on unmount.
+  useEffect(() => {
+    return () => {
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    };
+  }, []);
 
   // Default to the first category so a log can be one tap + a number.
   useEffect(() => {
@@ -52,11 +69,26 @@ export default function InputPage() {
   function handleSave() {
     if (!canSave || !period || !categoryId) return;
     setSaveError(null);
-    addExpense(period.id, { amount, categoryId }, () =>
+    const id = addExpense(period.id, { amount, categoryId }, () =>
       setSaveError("Couldn't sync that one — check Categories and try again."),
     );
+    const categoryName = categories.find((c) => c.id === categoryId)?.name ?? "";
+    setLastLogged({ id, amount, categoryName });
+
+    if ("vibrate" in navigator) navigator.vibrate(12);
+    setJustSaved(true);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setJustSaved(false), 900);
+
     setAmountRaw("");
     amountRef.current?.focus();
+  }
+
+  /** Fire-and-forget like the save — never awaited (Global Constraints). */
+  function handleUndo() {
+    if (!lastLogged || !period) return;
+    deleteExpense(period.id, lastLogged.id);
+    setLastLogged(null);
   }
 
   if (!configured) {
@@ -105,6 +137,9 @@ export default function InputPage() {
     );
   }
 
+  const spentFraction =
+    period && period.budgetAmount > 0 ? Math.min(total / period.budgetAmount, 1) : 0;
+
   return (
     // `dvh`, not `vh`: with the native keyboard open (ADR-0003) a `100vh` box
     // keeps its full height, so `mt-auto` pushes Save down behind the keyboard.
@@ -116,7 +151,7 @@ export default function InputPage() {
         <div>
           <p className="text-xs uppercase tracking-wide text-ink-muted">Remaining</p>
           <p
-            className={`text-2xl font-bold ${remaining < 0 ? "text-red-700" : "text-ink"}`}
+            className={`text-2xl font-bold ${remaining < 0 ? "text-danger-fg" : "text-ink"}`}
           >
             {formatPHP(remaining)}
           </p>
@@ -129,6 +164,44 @@ export default function InputPage() {
         </div>
       </header>
 
+      {/* Spent-of-budget at a glance — width animates, motion-reduce kills it. */}
+      <div
+        data-testid="budget-progress"
+        className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
+        role="progressbar"
+        aria-label="Budget used"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(spentFraction * 100)}
+      >
+        <div
+          className="h-full rounded-full bg-brand transition-[width] duration-200 motion-reduce:transition-none"
+          style={{ width: `${spentFraction * 100}%` }}
+        />
+      </div>
+
+      {/* Last-logged row — appears after every save so the user can undo instantly. */}
+      {lastLogged ? (
+        <div
+          data-testid="last-logged"
+          className="mt-3 flex items-center justify-between rounded-xl bg-surface px-3 py-2 shadow-sm"
+        >
+          <p className="text-xs text-ink-muted">
+            Last:{" "}
+            <span className="font-semibold text-ink">
+              {formatPHP(lastLogged.amount)} · {lastLogged.categoryName}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={handleUndo}
+            className="text-xs font-bold text-brand"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
+
       {/* Amount display — pre-focused, accepts the device keyboard too. */}
       <div className="mt-6">
         <input
@@ -138,7 +211,7 @@ export default function InputPage() {
           placeholder="0"
           value={amountRaw}
           onChange={(e) => setAmountRaw(sanitizeAmountInput(e.target.value))}
-          className="w-full bg-transparent text-center text-5xl font-bold tabular-nums outline-none"
+          className="w-full bg-transparent text-center text-6xl tracking-tight font-bold tabular-nums outline-none"
         />
         <p className="mt-1 text-center text-sm text-ink-muted">{formatPHP(amount)}</p>
       </div>
@@ -149,12 +222,13 @@ export default function InputPage() {
 
       <div className="mt-auto space-y-3 pb-4 pt-6">
         {saveError ? (
-          <p className="text-center text-sm text-red-700">{saveError}</p>
+          <p className="text-center text-sm text-danger-fg">{saveError}</p>
         ) : null}
         <Button onClick={handleSave} disabled={!canSave} className="w-full py-4 text-lg">
-          Save
+          {justSaved ? "Saved ✓" : "Save"}
         </Button>
       </div>
+
     </section>
   );
 }

@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { RegisterSW } from "@/components/providers/RegisterSW";
 import { NavBar } from "@/components/NavBar";
-import { BRAND_COLOR } from "@/lib/theme";
+import { BRAND_COLOR, THEME_COLOR_DARK } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Expense Tracker",
@@ -20,7 +20,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: BRAND_COLOR,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: BRAND_COLOR },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR_DARK },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
