@@ -37,7 +37,7 @@ Glass/blur surfaces (contrast + mid-range GPU cost), 3D/immersive visuals (load 
 - Category chip colors arrive from Firestore as data; `lib/contrast.ts` `readableTextOn` continues to decide chip text color per chip, which is theme-safe by construction.
 - PWA shell: `manifest.json` and the Next `themeColor` viewport export gain per-scheme values so the installed app's chrome matches in both themes.
 
-**Ships looking pixel-close to today in light mode.** Pure plumbing + the dark theme. This phase's risk is near zero and it unblocks everything after it.
+**Ships the subtle light-mode warm-up plus the full dark theme in one phase.** Layout and component classes are untouched — the only visible light-mode change is the warmed neutrals. This phase's risk is near zero and it unblocks everything after it.
 
 ## Section 2 — Screen re-skin (Phase 2)
 
@@ -61,7 +61,7 @@ Glass/blur surfaces (contrast + mid-range GPU cost), 3D/immersive visuals (load 
 
 **What:** The save moment gets feedback; motion is tuned as feedback, not decoration.
 
-- On save: `navigator.vibrate(12)` where supported; Save button flashes "Saved ✓" (~900ms); toast "Logged ₱250 · Food" with **Undo** (auto-dismiss ~3s); a "last logged" row (amount · category · Undo) appears under the header.
+- On save: `navigator.vibrate(12)` where supported; Save button flashes "Saved ✓" (~900ms); toast "Logged ₱250 · Food" with **Undo** (auto-dismiss ~3s); a "last logged" row (amount · category · Undo) appears under the header. The row is in-memory UI state only — it persists until the next expense is logged, is replaced by it, and disappears on reload; it is never stored.
 - **Undo hard-deletes that single expense.** Safe under the archive-don't-delete rule: nothing references an expense doc. New `deleteExpense(periodId, expenseId)` in `services/expenses.ts`, synchronous fire-and-forget against the local cache exactly like `addExpense` — never `await`ed in the UI.
 - **The write path is untouched.** All feedback is triggered after the synchronous cache write; nothing waits on the network. `handleSave` stays non-async.
 - Motion: chip/button press springs and toast/bar transitions all <200ms, all with `motion-reduce:` variants; the global reduced-motion escape hatch already exists.
