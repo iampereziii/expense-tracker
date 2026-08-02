@@ -36,7 +36,7 @@ export function AwarenessCard({ closedPeriod, nextPeriodId }: AwarenessCardProps
   const awareness = computeAwareness({ previous, current, incomeAmount: income, loggedExpenses });
 
   return (
-    <div className="mt-6 rounded-2xl border border-line bg-surface p-4">
+    <div>
       <p className="text-xs uppercase tracking-wide text-ink-muted">Last period</p>
 
       <p
@@ -76,3 +76,4 @@ export function AwarenessCard({ closedPeriod, nextPeriodId }: AwarenessCardProps
     </div>
   );
 }
+

@@ -11,6 +11,7 @@ import {
 } from "@/services/accounts";
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
+import { Card } from "@/components/ui/Card";
 import { formatPHP, parseAmount } from "@/lib/money";
 import type { Account, AccountType } from "@/types";
 
@@ -80,71 +81,72 @@ export default function AccountsPage() {
         Where your money actually sits. Tap a balance to update it anytime.
       </p>
 
-      <div className="mt-4 rounded-2xl bg-surface-sunken p-4">
+      <Card className="mt-4 bg-surface-sunken">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Total savings</p>
         <p className="text-3xl font-bold tabular-nums">{formatPHP(totals.total)}</p>
         <p className="mt-1 text-xs text-ink-muted">
           {formatPHP(totals.bank)} in banks · {formatPHP(totals.investment)} invested
         </p>
-      </div>
+      </Card>
 
-      <ul className="mt-6 space-y-2">
-        {accounts.map((account) => (
-          <li key={account.id} className="rounded-xl border border-line px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate font-medium">{account.name}</p>
-                <p className="text-xs text-ink-muted">{TYPE_LABEL[account.type]}</p>
+      <Card className="mt-3">
+        <ul className="divide-y divide-line">
+          {accounts.map((account) => (
+            <li key={account.id} className="py-3 first:pt-0 last:pb-0">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{account.name}</p>
+                  <p className="text-xs text-ink-muted">{TYPE_LABEL[account.type]}</p>
+                </div>
+                {editingId === account.id ? (
+                  <span className="flex shrink-0 items-center gap-2">
+                    <AmountField
+                      label={`Balance for ${account.name}`}
+                      value={editRaw}
+                      onChange={setEditRaw}
+                      className="w-28 py-2 text-right"
+                    />
+                    <Button onClick={() => saveEdit(account)} className="px-3 py-2 text-sm">
+                      Save
+                    </Button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => startEdit(account)}
+                    aria-label={`Edit balance for ${account.name}`}
+                    className="shrink-0 rounded-lg px-2 py-1 text-right text-lg font-semibold tabular-nums active:bg-line"
+                  >
+                    {formatPHP(account.balance)}
+                  </button>
+                )}
               </div>
-              {editingId === account.id ? (
-                <span className="flex shrink-0 items-center gap-2">
-                  <AmountField
-                    label={`Balance for ${account.name}`}
-                    value={editRaw}
-                    onChange={setEditRaw}
-                    className="w-28 py-2 text-right"
-                  />
-                  <Button onClick={() => saveEdit(account)} className="px-3 py-2 text-sm">
-                    Save
-                  </Button>
-                </span>
-              ) : (
-                <button
-                  onClick={() => startEdit(account)}
-                  aria-label={`Edit balance for ${account.name}`}
-                  className="shrink-0 rounded-lg px-2 py-1 text-right text-lg font-semibold tabular-nums active:bg-line"
+              <div className="mt-2 flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleRename(account)}
+                  className="px-3 py-1.5 text-sm"
                 >
-                  {formatPHP(account.balance)}
-                </button>
-              )}
-            </div>
-            <div className="mt-2 flex gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => handleRename(account)}
-                className="px-3 py-1.5 text-sm"
-              >
-                Rename
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => handleArchive(account)}
-                className="px-3 py-1.5 text-sm"
-              >
-                Remove
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                  Rename
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => handleArchive(account)}
+                  className="px-3 py-1.5 text-sm"
+                >
+                  Remove
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {accounts.length === 0 ? (
+          <p className="text-sm text-ink-muted">
+            No accounts yet. Add each bank or investment you keep money in.
+          </p>
+        ) : null}
+      </Card>
 
-      {accounts.length === 0 ? (
-        <p className="mt-6 text-sm text-ink-muted">
-          No accounts yet. Add each bank or investment you keep money in.
-        </p>
-      ) : null}
-
-      <div className="mt-8 space-y-3 rounded-2xl bg-surface-sunken p-4">
+      <Card className="mt-3 bg-surface-sunken space-y-3">
         <p className="text-sm font-medium">New account</p>
         <input
           placeholder="Account name"
@@ -167,7 +169,7 @@ export default function AccountsPage() {
         <Button onClick={handleAdd} disabled={busy || !name.trim()} className="w-full">
           Add account
         </Button>
-      </div>
+      </Card>
     </section>
   );
 }

@@ -36,7 +36,7 @@ export function SnapshotEditor({ periodId, uid }: SnapshotEditorProps) {
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-line p-4">
+    <div>
       <p className="text-sm font-medium">Balances at this cutoff</p>
       <p className="mt-0.5 text-xs text-ink-muted">
         {formatPHP(totals.total)} frozen · correctable until the next period starts

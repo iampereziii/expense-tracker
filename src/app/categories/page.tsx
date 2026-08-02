@@ -5,6 +5,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useCategories } from "@/hooks/useCategories";
 import { addCategory, archiveCategory, renameCategory } from "@/services/categories";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function CategoriesPage() {
   const { user, ready, configured } = useAuth();
@@ -44,42 +45,46 @@ export default function CategoriesPage() {
     <section className="pt-6">
       <h1 className="text-lg font-semibold">Categories</h1>
 
-      <div className="mt-4 flex gap-2">
-        <input
-          placeholder="New category"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-xl border border-line px-3 py-3 outline-none"
-        />
-        <Button onClick={handleAdd} disabled={busy || !name.trim()}>
-          Add
-        </Button>
-      </div>
+      <Card className="mt-4 bg-surface-sunken">
+        <div className="flex gap-2">
+          <input
+            placeholder="New category"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1 rounded-xl border border-line px-3 py-3 outline-none"
+          />
+          <Button onClick={handleAdd} disabled={busy || !name.trim()}>
+            Add
+          </Button>
+        </div>
+      </Card>
 
-      <ul className="mt-6 space-y-2">
-        {categories.map((c) => (
-          <li
-            key={c.id}
-            className="flex items-center justify-between rounded-xl border border-line px-4 py-3"
-          >
-            <span className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: c.color ?? "#64748b" }}
-              />
-              {c.name}
-            </span>
-            <span className="flex gap-2">
-              <Button variant="ghost" onClick={() => handleRename(c.id, c.name)} className="px-3 py-1.5 text-sm">
-                Rename
-              </Button>
-              <Button variant="danger" onClick={() => handleArchive(c.id, c.name)} className="px-3 py-1.5 text-sm">
-                Remove
-              </Button>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <Card className="mt-3">
+        <ul className="divide-y divide-line">
+          {categories.map((c) => (
+            <li
+              key={c.id}
+              className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: c.color ?? "#64748b" }}
+                />
+                {c.name}
+              </span>
+              <span className="flex gap-2">
+                <Button variant="ghost" onClick={() => handleRename(c.id, c.name)} className="px-3 py-1.5 text-sm">
+                  Rename
+                </Button>
+                <Button variant="danger" onClick={() => handleArchive(c.id, c.name)} className="px-3 py-1.5 text-sm">
+                  Remove
+                </Button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
     </section>
   );
 }

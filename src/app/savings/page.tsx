@@ -14,6 +14,7 @@ import {
 } from "@/services/savings";
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
+import { Card } from "@/components/ui/Card";
 import { formatPHP, parseAmount } from "@/lib/money";
 import { derivedSavingsMain } from "@/lib/savings";
 import type { Allocation, SavingsPot } from "@/types";
@@ -106,7 +107,7 @@ export default function SavingsPage() {
         Pots split your real bank savings into goals — no actual transfers needed.
       </p>
 
-      <div className="mt-4 rounded-2xl bg-surface-sunken p-4">
+      <Card className="mt-4 bg-surface-sunken">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Unallocated (main)</p>
         <p
           className={`text-3xl font-bold tabular-nums ${
@@ -123,135 +124,136 @@ export default function SavingsPage() {
             Pots claim more than your banks hold — you&apos;re over-allocating.
           </p>
         ) : null}
-      </div>
+      </Card>
 
-      <ul className="mt-6 space-y-2">
-        {pots.map((pot) => {
-          const expanded = openPotId === pot.id;
-          const history = allocations.filter((entry) => entry.potId === pot.id).slice(0, 5);
-          const others = pots.filter((other) => other.id !== pot.id);
+      <Card className="mt-3">
+        <ul className="divide-y divide-line">
+          {pots.map((pot) => {
+            const expanded = openPotId === pot.id;
+            const history = allocations.filter((entry) => entry.potId === pot.id).slice(0, 5);
+            const others = pots.filter((other) => other.id !== pot.id);
 
-          return (
-            <li key={pot.id} className="rounded-xl border border-line px-4 py-3">
-              <button
-                onClick={() => togglePot(pot.id)}
-                aria-expanded={expanded}
-                className="flex w-full items-center justify-between gap-3 text-left"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{pot.name}</span>
-                  <span className="text-xs text-ink-muted">
-                    {pot.incomePercent ? `${pot.incomePercent}% of income` : "Manual"}
+            return (
+              <li key={pot.id} className="py-3 first:pt-0 last:pb-0">
+                <button
+                  onClick={() => togglePot(pot.id)}
+                  aria-expanded={expanded}
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{pot.name}</span>
+                    <span className="text-xs text-ink-muted">
+                      {pot.incomePercent ? `${pot.incomePercent}% of income` : "Manual"}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-lg font-semibold tabular-nums">
-                  {formatPHP(balances[pot.id] ?? 0)}
-                </span>
-              </button>
+                  <span className="shrink-0 text-lg font-semibold tabular-nums">
+                    {formatPHP(balances[pot.id] ?? 0)}
+                  </span>
+                </button>
 
-              {expanded ? (
-                <div className="mt-3 space-y-3 border-t border-line pt-3">
-                  <div className="flex gap-2">
-                    <AmountField
-                      label={`Amount for ${pot.name}`}
-                      value={amountRaw}
-                      onChange={setAmountRaw}
-                      className="min-w-0 flex-1 py-2"
-                    />
-                    <Button
-                      onClick={() => handleEntry(pot.id, 1)}
-                      className="px-3 py-2 text-sm"
-                    >
-                      Add
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleEntry(pot.id, -1)}
-                      className="px-3 py-2 text-sm"
-                    >
-                      Take
-                    </Button>
-                  </div>
-
-                  {others.length > 0 ? (
+                {expanded ? (
+                  <div className="mt-3 space-y-3 border-t border-line pt-3">
                     <div className="flex gap-2">
-                      <select
-                        aria-label={`Move from ${pot.name} to`}
-                        value={moveTargetId}
-                        onChange={(e) => setMoveTargetId(e.target.value)}
-                        className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 text-sm outline-none"
-                      >
-                        <option value="">Move to…</option>
-                        {others.map((other) => (
-                          <option key={other.id} value={other.id}>
-                            {other.name}
-                          </option>
-                        ))}
-                      </select>
+                      <AmountField
+                        label={`Amount for ${pot.name}`}
+                        value={amountRaw}
+                        onChange={setAmountRaw}
+                        className="min-w-0 flex-1 py-2"
+                      />
                       <Button
-                        variant="ghost"
-                        onClick={() => handleMove(pot.id)}
-                        disabled={!moveTargetId}
+                        onClick={() => handleEntry(pot.id, 1)}
                         className="px-3 py-2 text-sm"
                       >
-                        Move
+                        Add
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleEntry(pot.id, -1)}
+                        className="px-3 py-2 text-sm"
+                      >
+                        Take
                       </Button>
                     </div>
-                  ) : null}
 
-                  {history.length > 0 ? (
-                    <ul className="space-y-1">
-                      {history.map((entry) => (
-                        <li key={entry.id} className="flex justify-between text-xs text-ink-muted">
-                          <span className="min-w-0 truncate">{historyLabel(entry)}</span>
-                          <span className="shrink-0 tabular-nums">
-                            {entry.amount > 0 ? "+" : ""}
-                            {formatPHP(entry.amount)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-ink-muted">Nothing in this pot yet.</p>
-                  )}
+                    {others.length > 0 ? (
+                      <div className="flex gap-2">
+                        <select
+                          aria-label={`Move from ${pot.name} to`}
+                          value={moveTargetId}
+                          onChange={(e) => setMoveTargetId(e.target.value)}
+                          className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 text-sm outline-none"
+                        >
+                          <option value="">Move to…</option>
+                          {others.map((other) => (
+                            <option key={other.id} value={other.id}>
+                              {other.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleMove(pot.id)}
+                          disabled={!moveTargetId}
+                          className="px-3 py-2 text-sm"
+                        >
+                          Move
+                        </Button>
+                      </div>
+                    ) : null}
 
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleRename(pot)}
-                      className="px-3 py-1.5 text-sm"
-                    >
-                      Rename
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleRule(pot)}
-                      className="px-3 py-1.5 text-sm"
-                    >
-                      Rule
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleArchive(pot)}
-                      className="px-3 py-1.5 text-sm"
-                    >
-                      Remove
-                    </Button>
+                    {history.length > 0 ? (
+                      <ul className="space-y-1">
+                        {history.map((entry) => (
+                          <li key={entry.id} className="flex justify-between text-xs text-ink-muted">
+                            <span className="min-w-0 truncate">{historyLabel(entry)}</span>
+                            <span className="shrink-0 tabular-nums">
+                              {entry.amount > 0 ? "+" : ""}
+                              {formatPHP(entry.amount)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-ink-muted">Nothing in this pot yet.</p>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleRename(pot)}
+                        className="px-3 py-1.5 text-sm"
+                      >
+                        Rename
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleRule(pot)}
+                        className="px-3 py-1.5 text-sm"
+                      >
+                        Rule
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleArchive(pot)}
+                        className="px-3 py-1.5 text-sm"
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+        {pots.length === 0 ? (
+          <p className="text-sm text-ink-muted">
+            No pots yet. Add one, give it a percentage, and it fills itself each period.
+          </p>
+        ) : null}
+      </Card>
 
-      {pots.length === 0 ? (
-        <p className="mt-6 text-sm text-ink-muted">
-          No pots yet. Add one, give it a percentage, and it fills itself each period.
-        </p>
-      ) : null}
-
-      <div className="mt-8 space-y-3 rounded-2xl bg-surface-sunken p-4">
+      <Card className="mt-3 bg-surface-sunken space-y-3">
         <p className="text-sm font-medium">New pot</p>
         <input
           placeholder="Pot name"
@@ -270,7 +272,7 @@ export default function SavingsPage() {
         <Button onClick={handleAddPot} disabled={busy || !name.trim()} className="w-full">
           Add pot
         </Button>
-      </div>
+      </Card>
     </section>
   );
 }

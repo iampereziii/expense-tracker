@@ -9,6 +9,7 @@ import { allPeriodsQuery, declarePeriod } from "@/services/periods";
 import type { SnapshotInput } from "@/services/balances";
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
+import { Card } from "@/components/ui/Card";
 import { AwarenessCard } from "@/components/AwarenessCard";
 import { SnapshotEditor } from "@/components/SnapshotEditor";
 import { formatPHP, parseAmount } from "@/lib/money";
@@ -88,7 +89,7 @@ export default function PeriodsPage() {
         balances as that cutoff.
       </p>
 
-      <div className="mt-4 space-y-3 rounded-2xl bg-surface-sunken p-4">
+      <Card className="mt-4 bg-surface-sunken space-y-3">
         <AmountField
           label="Budget amount"
           placeholder="Budget amount"
@@ -160,42 +161,50 @@ export default function PeriodsPage() {
         <Button onClick={handleDeclare} disabled={busy || !budget} className="w-full">
           {busy ? "Starting…" : "Start new period"}
         </Button>
-      </div>
+      </Card>
 
       {lastClosed ? (
-        <AwarenessCard closedPeriod={lastClosed} nextPeriodId={periods[0]!.id} />
+        <Card className="mt-3 border border-line">
+          <AwarenessCard closedPeriod={lastClosed} nextPeriodId={periods[0]!.id} />
+        </Card>
       ) : null}
 
-      {activePeriod ? <SnapshotEditor periodId={activePeriod.id} uid={user?.uid ?? null} /> : null}
+      {activePeriod ? (
+        <Card className="mt-3 border border-line">
+          <SnapshotEditor periodId={activePeriod.id} uid={user?.uid ?? null} />
+        </Card>
+      ) : null}
 
-      <ul className="mt-6 space-y-2">
-        {periods.map((period) => {
-          const open = period.endDate === null;
-          return (
-            <li
-              key={period.id}
-              className="flex items-center justify-between rounded-xl border border-line px-4 py-3"
-            >
-              <div>
-                <p className="font-medium">{formatPHP(period.budgetAmount)}</p>
-                <p className="text-xs text-ink-muted">
-                  {period.incomeAmount
-                    ? `${formatPHP(period.incomeAmount)} income`
-                    : "No income declared"}
-                  {period.incomeNote ? ` · ${period.incomeNote}` : ""}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  open ? "bg-ok-bg text-ok-fg" : "bg-surface-sunken text-ink-muted"
-                }`}
+      <Card className="mt-3">
+        <ul className="divide-y divide-line">
+          {periods.map((period) => {
+            const open = period.endDate === null;
+            return (
+              <li
+                key={period.id}
+                className="flex items-center justify-between px-0 py-3 first:pt-0 last:pb-0"
               >
-                {open ? "Active" : "Closed"}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <div>
+                  <p className="font-medium">{formatPHP(period.budgetAmount)}</p>
+                  <p className="text-xs text-ink-muted">
+                    {period.incomeAmount
+                      ? `${formatPHP(period.incomeAmount)} income`
+                      : "No income declared"}
+                    {period.incomeNote ? ` · ${period.incomeNote}` : ""}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    open ? "bg-ok-bg text-ok-fg" : "bg-surface-sunken text-ink-muted"
+                  }`}
+                >
+                  {open ? "Active" : "Closed"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
     </section>
   );
 }
