@@ -31,6 +31,6 @@ test.describe("save feedback and undo", () => {
 
     await page.getByTestId("last-logged").getByRole("button", { name: "Undo" }).click();
     await expect(spent).toHaveText(before ?? "");
-    await expect(page.getByTestId("last-logged")).toBeHidden();
+    await expect(page.getByTestId("last-logged")).not.toBeAttached();
   });
 });

@@ -34,9 +34,7 @@ export default function InputPage() {
 
   const [lastLogged, setLastLogged] = useState<LastLogged | null>(null);
   const [justSaved, setJustSaved] = useState(false);
-  const [toastOpen, setToastOpen] = useState(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pre-focus the amount field on open — no tap needed to start typing (Rule 1).
   useEffect(() => {
@@ -47,7 +45,6 @@ export default function InputPage() {
   useEffect(() => {
     return () => {
       if (savedTimer.current) clearTimeout(savedTimer.current);
-      if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, []);
 
@@ -82,9 +79,6 @@ export default function InputPage() {
     setJustSaved(true);
     if (savedTimer.current) clearTimeout(savedTimer.current);
     savedTimer.current = setTimeout(() => setJustSaved(false), 900);
-    setToastOpen(true);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastOpen(false), 3000);
 
     setAmountRaw("");
     amountRef.current?.focus();
@@ -95,7 +89,6 @@ export default function InputPage() {
     if (!lastLogged || !period) return;
     deleteExpense(period.id, lastLogged.id);
     setLastLogged(null);
-    setToastOpen(false);
   }
 
   if (!configured) {
@@ -236,20 +229,6 @@ export default function InputPage() {
         </Button>
       </div>
 
-      {/* Undo toast — fixed above nav, self-dismisses after 3 s. bg-ink inverts per theme. */}
-      {toastOpen && lastLogged ? (
-        <div
-          role="status"
-          className="fixed inset-x-4 bottom-24 z-20 flex items-center justify-between rounded-xl bg-ink px-4 py-3 text-sm text-surface shadow-lg"
-        >
-          <span>
-            Logged {formatPHP(lastLogged.amount)} · {lastLogged.categoryName}
-          </span>
-          <button type="button" onClick={handleUndo} className="font-bold underline">
-            Undo
-          </button>
-        </div>
-      ) : null}
     </section>
   );
 }
