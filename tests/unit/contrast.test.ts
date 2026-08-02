@@ -70,7 +70,7 @@ describe("contrastRatio", () => {
 
   it.each([
     ["ink.DEFAULT on white", INK_COLOR, "#ffffff"],
-    ["ink.muted on white", "#475569", "#ffffff"],
+    ["ink.muted on white", "#47604f", "#ffffff"],
     ["ok.fg on ok.bg", "#065f46", "#ecfdf5"],
     ["warn.fg on warn.bg", "#92400e", "#fffbeb"],
     ["white on brand.dark", "#ffffff", "#166534"],

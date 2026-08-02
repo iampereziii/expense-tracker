@@ -3,12 +3,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import tailwindConfig from "../../tailwind.config";
 import { BRAND_COLOR, INK_COLOR } from "@/lib/theme";
+import { LIGHT } from "@/lib/tokens";
 
 /**
- * The brand hex used to be written in three independent places. These tests are
- * what make `lib/theme.ts` the actual single source rather than a third copy:
- * `manifest.json` is static JSON and the Tailwind config is build-time data, so
- * neither can import it — but both can be asserted against it.
+ * Tailwind now holds var(--…) references, so the hex lives in tokens.ts. These
+ * tests pin the remaining copies (manifest, theme.ts) to that single source.
  */
 describe("theme colour has one source", () => {
   const manifest: unknown = JSON.parse(
@@ -24,15 +23,24 @@ describe("theme colour has one source", () => {
     return node;
   }
 
-  it("matches the PWA manifest theme_color", () => {
-    expect(manifest).toMatchObject({ theme_color: BRAND_COLOR });
+  it("theme.ts constants match the light tokens", () => {
+    expect(BRAND_COLOR).toBe(LIGHT.brand);
+    expect(INK_COLOR).toBe(LIGHT.ink);
   });
 
-  it("matches the Tailwind brand token", () => {
-    expect(colorAt(["brand", "DEFAULT"])).toBe(BRAND_COLOR);
+  it("manifest theme_color stays the light brand", () => {
+    expect(manifest).toMatchObject({ theme_color: LIGHT.brand });
   });
 
-  it("matches the Tailwind ink token", () => {
-    expect(colorAt(["ink", "DEFAULT"])).toBe(INK_COLOR);
+  it("manifest background_color is the light ground", () => {
+    expect(manifest).toMatchObject({ background_color: LIGHT.surfaceGround });
+  });
+
+  it("Tailwind brand token delegates to the CSS variable", () => {
+    expect(colorAt(["brand", "DEFAULT"])).toBe("var(--brand)");
+  });
+
+  it("Tailwind ink token delegates to the CSS variable", () => {
+    expect(colorAt(["ink", "DEFAULT"])).toBe("var(--ink)");
   });
 });
