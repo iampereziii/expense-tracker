@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { MoneySwitch } from "@/components/MoneySwitch";
 import { formatPHP, parseAmount } from "@/lib/money";
 import { derivedSavingsMain } from "@/lib/savings";
+import { SyncIndicator } from "@/components/SyncIndicator";
 import type { Allocation, SavingsPot } from "@/types";
 
 function historyLabel(entry: Allocation): string {
@@ -104,7 +105,10 @@ export default function SavingsPage() {
   return (
     <section className="pt-6 pb-24">
       <MoneySwitch />
-      <h1 className="text-lg font-semibold">Savings</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-lg font-semibold">Savings</h1>
+        <SyncIndicator />
+      </div>
       <p className="mt-1 text-sm text-ink-muted">
         Pots split your real bank savings into goals — no actual transfers needed.
       </p>

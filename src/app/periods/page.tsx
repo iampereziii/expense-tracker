@@ -14,6 +14,7 @@ import { AwarenessCard } from "@/components/AwarenessCard";
 import { SnapshotEditor } from "@/components/SnapshotEditor";
 import { formatPHP, parseAmount } from "@/lib/money";
 import { plannedAllocations } from "@/lib/savings";
+import { SyncIndicator } from "@/components/SyncIndicator";
 import type { Period } from "@/types";
 
 export default function PeriodsPage() {
@@ -83,7 +84,10 @@ export default function PeriodsPage() {
 
   return (
     <section className="pt-6 pb-24">
-      <h1 className="text-lg font-semibold">Budget periods</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-lg font-semibold">Budget periods</h1>
+        <SyncIndicator />
+      </div>
       <p className="mt-1 text-sm text-ink-muted">
         Start a new period when income lands. It closes the previous one and freezes your
         balances as that cutoff.
