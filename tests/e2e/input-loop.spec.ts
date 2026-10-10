@@ -52,6 +52,46 @@ test.describe("fast expense input", () => {
     await expect(spent).not.toHaveText(before ?? "");
   });
 
+  test("the note stays out of the way until asked for", async ({ page }) => {
+    await page.goto("/");
+    // Amount keeps focus on open; the note is collapsed behind "+ Note".
+    await expect(page.getByLabel("Amount")).toBeFocused();
+    await expect(page.getByLabel("Note")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "+ Note" })).toBeVisible();
+  });
+
+  test("logs an expense with a note, then clears and collapses it", async ({ page }) => {
+    await page.goto("/");
+    const amount = page.getByLabel("Amount");
+
+    await page.keyboard.type("250");
+    await page.getByRole("group", { name: "Category" }).getByRole("button").first().click();
+    await page.getByRole("button", { name: "+ Note" }).click();
+
+    const note = page.getByLabel("Note");
+    await expect(note).toBeFocused();
+    await note.fill("  Jollibee w/ kids  ");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // Trimmed note shows in the Last logged row; the field resets for the next log.
+    await expect(page.getByTestId("last-logged")).toContainText("· Jollibee w/ kids");
+    await expect(page.getByLabel("Note")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "+ Note" })).toBeVisible();
+    await expect(amount).toHaveValue("");
+    await expect(amount).toBeFocused();
+
+    // Reopening starts empty — the previous note never carries over.
+    await page.getByRole("button", { name: "+ Note" }).click();
+    await expect(page.getByLabel("Note")).toHaveValue("");
+  });
+
+  test("caps the note at 80 characters", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "+ Note" }).click();
+    await page.getByLabel("Note").pressSequentially("x".repeat(100));
+    await expect(page.getByLabel("Note")).toHaveValue("x".repeat(80));
+  });
+
   test("shows budget progress under the header", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("budget-progress")).toBeVisible();
