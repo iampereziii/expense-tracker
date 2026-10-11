@@ -28,6 +28,12 @@ export function activeCategoriesQuery(): Query {
   );
 }
 
+/** Every category, archived included, oldest first — for history/report, where
+ *  past expenses must still resolve an archived category's name and colour (Rule 7). */
+export function allCategoriesQuery(): Query {
+  return query(categoriesCol(), orderBy("createdAt", "asc"));
+}
+
 export async function addCategory(name: string, color = DEFAULT_CATEGORY_COLOR): Promise<void> {
   await addDoc(categoriesCol(), {
     name: name.trim(),

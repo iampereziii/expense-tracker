@@ -36,11 +36,12 @@ src/
     accounts/page.tsx     # accounts + live balances (add / rename / archive / edit balance)
     savings/page.tsx      # virtual savings pots + manual transfers; derived "savings main"
     categories/page.tsx   # category add / rename / archive
-    report/page.tsx       # PARKED stub (F5)
+    report/page.tsx       # F5 report: period picker, spend vs budget, category bars, itemized list
     layout.tsx            # AuthProvider + NavBar + SW registration + metadata
     globals.css
   components/
     input/                # CategoryChips
+    report/               # PeriodPicker, CategoryBreakdown, ExpenseList
     ui/                   # Button, AmountField (primitives)
     providers/            # AuthProvider (anon sign-in + seed), RegisterSW
     NavBar.tsx, SyncIndicator.tsx, AwarenessCard.tsx, SnapshotEditor.tsx
@@ -91,6 +92,5 @@ public/  manifest.json, sw.js, icons/        firestore.rules        .env.example
 
 - **A backend/API layer** — there isn't one by design; the client SDK + Security Rules are the backend. No Next.js API routes without revisiting ADR-0001.
 - **Real auth / login UX** — deferred (ADR-0002). Anonymous Auth only for MVP.
-- **Out-of-scope features** — CSV/PDF export, multi-currency, recurring transactions, multi-household. Post-MVP; must not creep into the build.
-- **The report** (`/report`) — parked; build only after the input routine has stuck (and Gap #5 charting choice is settled).
+- **Out-of-scope features** — chart libraries (the report uses plain CSS bars), CSV/PDF export, multi-currency, recurring transactions, multi-household. Post-MVP; must not creep into the build.
 - **Credentials beyond the public Firebase config** — never commit `.env.local`.

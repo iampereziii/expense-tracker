@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { firebaseSkipReason, hasFirebaseEnv } from "./_env";
 
-test.describe("four-tab navigation", () => {
+test.describe("five-tab navigation", () => {
   test.skip(!hasFirebaseEnv, firebaseSkipReason);
 
   test("More page links to Categories", async ({ page }) => {
@@ -11,14 +11,22 @@ test.describe("four-tab navigation", () => {
     await expect(page.getByRole("heading", { name: "Categories" })).toBeVisible();
   });
 
-  test("nav shows exactly four tabs", async ({ page }) => {
+  test("nav shows exactly five tabs", async ({ page }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation");
-    await expect(nav.getByRole("link")).toHaveCount(4);
+    await expect(nav.getByRole("link")).toHaveCount(5);
     await expect(nav.getByRole("link", { name: "Log" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Budget" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Money" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Report" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "More" })).toBeVisible();
+  });
+
+  test("Report tab opens the report in one tap", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("navigation").getByRole("link", { name: "Report" }).click();
+    await expect(page).toHaveURL(/\/report/);
+    await expect(page.getByRole("heading", { name: "Report" })).toBeVisible();
   });
 
   test("Money tab switches between Accounts and Savings", async ({ page }) => {
