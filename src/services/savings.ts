@@ -3,7 +3,7 @@ import {
   query,
   where,
   orderBy,
-  addDoc,
+  setDoc,
   updateDoc,
   doc,
   writeBatch,
@@ -17,6 +17,7 @@ import { getDb, HOUSEHOLD_ID } from "@/lib/firebase";
 import { roundCentavos } from "@/lib/money";
 import { allocationForIncome, allocationId, normalizePercent } from "@/lib/savings";
 import type { SavingsPot } from "@/types";
+import { fireAndForget, type WriteErrorHandler } from "./write";
 
 function potsCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "savingsPots");
@@ -28,7 +29,9 @@ function allocationsCol(): CollectionReference {
 
 /** Active pots, oldest first. */
 export function activePotsQuery(): Query {
-  return query(potsCol(), where("archived", "==", false), orderBy("createdAt", "asc"));
+  // No orderBy: with the archived filter it would need a composite index (see
+  // lib/order.ts). The hook sorts by createdAt instead.
+  return query(potsCol(), where("archived", "==", false));
 }
 
 /** The whole ledger, newest first — pot balances are summed from this. */
@@ -36,27 +39,44 @@ export function allocationsQuery(): Query {
   return query(allocationsCol(), orderBy("createdAt", "desc"));
 }
 
-export async function addPot(name: string, incomePercent: number | null): Promise<void> {
-  await addDoc(potsCol(), {
-    name: name.trim(),
-    incomePercent: normalizePercent(incomePercent),
-    archived: false,
-    createdAt: serverTimestamp(),
-  });
+/** Not awaited (see fireAndForget) — the pot appears from the local cache at once. */
+export function addPot(
+  name: string,
+  incomePercent: number | null,
+  onError?: WriteErrorHandler,
+): string {
+  const ref = doc(potsCol());
+  fireAndForget(
+    setDoc(ref, {
+      name: name.trim(),
+      incomePercent: normalizePercent(incomePercent),
+      archived: false,
+      createdAt: serverTimestamp(),
+    }),
+    onError,
+  );
+  return ref.id;
 }
 
-export async function renamePot(id: string, name: string): Promise<void> {
-  await updateDoc(doc(potsCol(), id), { name: name.trim() });
+export function renamePot(id: string, name: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(potsCol(), id), { name: name.trim() }), onError);
 }
 
 /** At most one rule per pot — null turns it back into a manual pot. */
-export async function setPotPercent(id: string, incomePercent: number | null): Promise<void> {
-  await updateDoc(doc(potsCol(), id), { incomePercent: normalizePercent(incomePercent) });
+export function setPotPercent(
+  id: string,
+  incomePercent: number | null,
+  onError?: WriteErrorHandler,
+): void {
+  fireAndForget(
+    updateDoc(doc(potsCol(), id), { incomePercent: normalizePercent(incomePercent) }),
+    onError,
+  );
 }
 
 /** Soft-remove: the pot leaves the list but its ledger entries stay resolvable. */
-export async function archivePot(id: string): Promise<void> {
-  await updateDoc(doc(potsCol(), id), { archived: true });
+export function archivePot(id: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(potsCol(), id), { archived: true }), onError);
 }
 
 /**
@@ -64,31 +84,39 @@ export async function archivePot(id: string): Promise<void> {
  * unlike percentage allocations these are genuinely distinct events, so two devices
  * each adding ₱500 should produce two entries.
  */
-export async function addPotEntry(
+export function addPotEntry(
   potId: string,
   amount: number,
   note: string | null,
   uid: string | null,
-): Promise<void> {
-  await addDoc(allocationsCol(), {
-    potId,
-    amount: roundCentavos(amount),
-    kind: "manual",
-    periodId: null,
-    transferId: null,
-    note: note?.trim() ? note.trim() : null,
-    createdAt: serverTimestamp(),
-    createdBy: uid,
-  });
+  onError?: WriteErrorHandler,
+): void {
+  fireAndForget(
+    setDoc(doc(allocationsCol()), {
+      potId,
+      amount: roundCentavos(amount),
+      kind: "manual",
+      periodId: null,
+      transferId: null,
+      note: note?.trim() ? note.trim() : null,
+      createdAt: serverTimestamp(),
+      createdBy: uid,
+    }),
+    onError,
+  );
 }
 
-/** Move imaginary money between pots as two ledger legs sharing a transferId. */
-export async function movePotFunds(
+/**
+ * Move imaginary money between pots as two ledger legs sharing a transferId.
+ * Still one batch — both legs land together or not at all — just not awaited.
+ */
+export function movePotFunds(
   fromPotId: string,
   toPotId: string,
   amount: number,
   uid: string | null,
-): Promise<void> {
+  onError?: WriteErrorHandler,
+): void {
   const value = roundCentavos(amount);
   if (value <= 0 || fromPotId === toPotId) return;
 
@@ -118,7 +146,7 @@ export async function movePotFunds(
     createdAt,
     createdBy: uid,
   });
-  await batch.commit();
+  fireAndForget(batch.commit(), onError);
 }
 
 /**

@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQueryData } from "./useQueryData";
+import { sortByCreatedAt } from "@/lib/order";
 import { allCategoriesQuery } from "@/services/categories";
 import type { Category } from "@/types";
 
@@ -9,6 +11,9 @@ export function useAllCategories(enabled: boolean): { categories: Category[]; lo
   const { data, loading } = useQueryData<Category>(
     () => (enabled ? allCategoriesQuery() : null),
     [enabled],
+    // Same as useCategories: pending createdAt reads as local time so sorting is stable.
+    { serverTimestamps: "estimate" },
   );
-  return { categories: data, loading };
+  const categories = useMemo(() => sortByCreatedAt(data), [data]);
+  return { categories, loading };
 }

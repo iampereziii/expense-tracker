@@ -2,8 +2,8 @@ import {
   collection,
   query,
   where,
-  orderBy,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -14,42 +14,55 @@ import {
 } from "firebase/firestore";
 import { getDb, HOUSEHOLD_ID } from "@/lib/firebase";
 import { SEED_CATEGORIES, DEFAULT_CATEGORY_COLOR } from "@/lib/constants";
+import { fireAndForget, type WriteErrorHandler } from "./write";
 
 function categoriesCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "categories");
 }
 
-/** Active (non-archived) categories for the input chip row, oldest first. */
+/** Active (non-archived) categories for the input chip row. Unordered — see useCategories. */
 export function activeCategoriesQuery(): Query {
-  return query(
-    categoriesCol(),
-    where("archived", "==", false),
-    orderBy("createdAt", "asc"),
+  // No orderBy: with the archived filter it would need a composite index (see
+  // lib/order.ts). The hook sorts by createdAt instead.
+  return query(categoriesCol(), where("archived", "==", false));
+}
+
+/**
+ * Not awaited (see fireAndForget): the chip appears from the local cache at once,
+ * online or off. Pre-generated ref so the caller gets the id synchronously.
+ */
+export function addCategory(
+  name: string,
+  color = DEFAULT_CATEGORY_COLOR,
+  onError?: WriteErrorHandler,
+): string {
+  const ref = doc(categoriesCol());
+  fireAndForget(
+    setDoc(ref, {
+      name: name.trim(),
+      color,
+      archived: false,
+      createdAt: serverTimestamp(),
+    }),
+    onError,
   );
+  return ref.id;
 }
 
-/** Every category, archived included, oldest first — for history/report, where
- *  past expenses must still resolve an archived category's name and colour (Rule 7). */
+/** Every category, archived included — for history/report, where past expenses must
+ *  still resolve an archived category's name and colour (Rule 7). Unordered like
+ *  activeCategoriesQuery; useAllCategories sorts client-side (lib/order.ts). */
 export function allCategoriesQuery(): Query {
-  return query(categoriesCol(), orderBy("createdAt", "asc"));
+  return query(categoriesCol());
 }
 
-export async function addCategory(name: string, color = DEFAULT_CATEGORY_COLOR): Promise<void> {
-  await addDoc(categoriesCol(), {
-    name: name.trim(),
-    color,
-    archived: false,
-    createdAt: serverTimestamp(),
-  });
-}
-
-export async function renameCategory(id: string, name: string): Promise<void> {
-  await updateDoc(doc(categoriesCol(), id), { name: name.trim() });
+export function renameCategory(id: string, name: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(categoriesCol(), id), { name: name.trim() }), onError);
 }
 
 /** Soft-remove (Rule 7): hide from the input row but keep resolvable for history. */
-export async function archiveCategory(id: string): Promise<void> {
-  await updateDoc(doc(categoriesCol(), id), { archived: true });
+export function archiveCategory(id: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(categoriesCol(), id), { archived: true }), onError);
 }
 
 /** Seed Food/Bills on first run if the household has no categories yet. */

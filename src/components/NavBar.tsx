@@ -85,7 +85,8 @@ const TABS: readonly Tab[] = [
 export function NavBar() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-10 grid h-[calc(var(--nav-h)+env(safe-area-inset-bottom))] grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+
       {TABS.map((t) => {
         const active = t.isActive(pathname);
         return (
@@ -93,7 +94,7 @@ export function NavBar() {
             key={t.href}
             href={t.href}
             aria-current={active ? "page" : undefined}
-            className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${
+            className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
               active ? "text-brand" : "text-ink-muted"
             }`}
           >

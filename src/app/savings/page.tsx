@@ -17,6 +17,7 @@ import { AmountField } from "@/components/ui/AmountField";
 import { Card } from "@/components/ui/Card";
 import { MoneySwitch } from "@/components/MoneySwitch";
 import { formatPHP, parseAmount } from "@/lib/money";
+import { WRITE_ERROR_MESSAGE } from "@/lib/constants";
 import { derivedSavingsMain } from "@/lib/savings";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import type { Allocation, SavingsPot } from "@/types";
@@ -36,7 +37,8 @@ export default function SavingsPage() {
 
   const [name, setName] = useState("");
   const [percent, setPercent] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const onSyncError = () => setSyncError(WRITE_ERROR_MESSAGE);
   const [openPotId, setOpenPotId] = useState<string | null>(null);
   const [amountRaw, setAmountRaw] = useState("");
   const [moveTargetId, setMoveTargetId] = useState("");
@@ -44,18 +46,16 @@ export default function SavingsPage() {
   // Savings main is derived, never stored: real bank money that no pot has claimed.
   const savingsMain = derivedSavingsMain(totals.bank, potTotal);
 
-  async function handleAddPot() {
+  // Writes are never awaited: balances and lists re-render from the local cache
+  // straight away, online or off. Awaiting would block on the server's acknowledgement.
+  function handleAddPot() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setBusy(true);
-    try {
-      const rule = percent.trim() ? Number.parseFloat(percent) : null;
-      await addPot(trimmed, Number.isFinite(rule as number) ? (rule as number) : null);
-      setName("");
-      setPercent("");
-    } finally {
-      setBusy(false);
-    }
+    setSyncError(null);
+    const rule = percent.trim() ? Number.parseFloat(percent) : null;
+    addPot(trimmed, Number.isFinite(rule as number) ? (rule as number) : null, onSyncError);
+    setName("");
+    setPercent("");
   }
 
   function togglePot(potId: string) {
@@ -64,41 +64,58 @@ export default function SavingsPage() {
     setMoveTargetId("");
   }
 
-  async function handleEntry(potId: string, direction: 1 | -1) {
+  function handleEntry(potId: string, direction: 1 | -1) {
     const amount = parseAmount(amountRaw);
     if (amount <= 0) return;
     setAmountRaw("");
-    await addPotEntry(potId, amount * direction, direction > 0 ? "Added" : "Withdrawn", uid);
+    setSyncError(null);
+    addPotEntry(
+      potId,
+      amount * direction,
+      direction > 0 ? "Added" : "Withdrawn",
+      uid,
+      onSyncError,
+    );
   }
 
-  async function handleMove(fromPotId: string) {
+  function handleMove(fromPotId: string) {
     const amount = parseAmount(amountRaw);
     if (amount <= 0 || !moveTargetId) return;
     setAmountRaw("");
     setMoveTargetId("");
-    await movePotFunds(fromPotId, moveTargetId, amount, uid);
+    setSyncError(null);
+    movePotFunds(fromPotId, moveTargetId, amount, uid, onSyncError);
   }
 
-  async function handleRename(pot: SavingsPot) {
+  function handleRename(pot: SavingsPot) {
     const next = window.prompt("Rename pot", pot.name);
-    if (next && next.trim() && next.trim() !== pot.name) await renamePot(pot.id, next.trim());
+    if (next && next.trim() && next.trim() !== pot.name) {
+      setSyncError(null);
+      renamePot(pot.id, next.trim(), onSyncError);
+    }
   }
 
-  async function handleRule(pot: SavingsPot) {
+  function handleRule(pot: SavingsPot) {
     const next = window.prompt(
       "Percent of income to auto-save here (blank for none)",
       pot.incomePercent ? String(pot.incomePercent) : "",
     );
     if (next === null) return;
     const parsed = next.trim() ? Number.parseFloat(next) : null;
-    await setPotPercent(pot.id, Number.isFinite(parsed as number) ? (parsed as number) : null);
+    setSyncError(null);
+    setPotPercent(
+      pot.id,
+      Number.isFinite(parsed as number) ? (parsed as number) : null,
+      onSyncError,
+    );
   }
 
-  async function handleArchive(pot: SavingsPot) {
+  function handleArchive(pot: SavingsPot) {
     if (
       window.confirm(`Remove "${pot.name}"? Its ${formatPHP(balances[pot.id] ?? 0)} returns to main.`)
     ) {
-      await archivePot(pot.id);
+      setSyncError(null);
+      archivePot(pot.id, onSyncError);
     }
   }
 
@@ -112,6 +129,11 @@ export default function SavingsPage() {
       <p className="mt-1 text-sm text-ink-muted">
         Pots split your real bank savings into goals — no actual transfers needed.
       </p>
+      {syncError ? (
+        <p role="alert" className="mt-3 text-sm text-danger-fg">
+          {syncError}
+        </p>
+      ) : null}
 
       <Card tone="sunken" className="mt-4">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Unallocated (main)</p>
@@ -275,7 +297,7 @@ export default function SavingsPage() {
           onChange={(e) => setPercent(e.target.value.replace(/[^0-9.]/g, ""))}
           className="w-full rounded-xl border border-line px-3 py-3 outline-none"
         />
-        <Button onClick={handleAddPot} disabled={busy || !name.trim()} className="w-full">
+        <Button onClick={handleAddPot} disabled={!name.trim()} className="w-full">
           Add pot
         </Button>
       </Card>

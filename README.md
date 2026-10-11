@@ -24,9 +24,13 @@ Without `.env.local` the app runs but shows a "set your config" screen — it ne
 | Script | Does |
 |--------|------|
 | `npm run dev` | Local dev server |
+| `npm run dev:lan` | Dev server exposed on the LAN — for testing on a real phone |
 | `npm run build` | Static export to `out/` |
+| `npm run serve:out` | Serve the built `out/` locally (PWA / offline checks) |
+| `npm run lint` | `next lint` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest unit tests |
+| `npm run test:watch` | Vitest in watch mode |
 | `npm run test:e2e` | Playwright (input + offline-sync flow) |
 
 ## Firebase setup (one-time)

@@ -27,3 +27,6 @@ export const SEED_CATEGORIES: ReadonlyArray<{ name: string; color: string }> = [
 
 /** Default chip color when the user hasn't picked one. */
 export const DEFAULT_CATEGORY_COLOR = "#475569";
+
+/** Shown when the server later rejects a write that already landed locally. */
+export const WRITE_ERROR_MESSAGE = "Couldn't sync that change — try again.";
