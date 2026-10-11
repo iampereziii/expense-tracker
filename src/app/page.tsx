@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/Button";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { addExpense, deleteExpense } from "@/services/expenses";
 import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
+import { EXPENSE_NOTE_MAX_LENGTH, normalizeNote } from "@/lib/note";
 
 interface LastLogged {
   id: string;
   amount: number;
   categoryName: string;
+  note: string | null;
 }
 
 export default function InputPage() {
@@ -31,6 +33,11 @@ export default function InputPage() {
   const [amountRaw, setAmountRaw] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+
+  // Optional note, collapsed behind "+ Note" so the no-note loop is unchanged.
+  const [note, setNote] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
+  const noteRef = useRef<HTMLInputElement>(null);
 
   const [lastLogged, setLastLogged] = useState<LastLogged | null>(null);
   const [justSaved, setJustSaved] = useState(false);
@@ -69,11 +76,11 @@ export default function InputPage() {
   function handleSave() {
     if (!canSave || !period || !categoryId) return;
     setSaveError(null);
-    const id = addExpense(period.id, { amount, categoryId }, () =>
+    const id = addExpense(period.id, { amount, categoryId, note }, () =>
       setSaveError("Couldn't sync that one — check Categories and try again."),
     );
     const categoryName = categories.find((c) => c.id === categoryId)?.name ?? "";
-    setLastLogged({ id, amount, categoryName });
+    setLastLogged({ id, amount, categoryName, note: normalizeNote(note) });
 
     if ("vibrate" in navigator) navigator.vibrate(12);
     setJustSaved(true);
@@ -81,7 +88,16 @@ export default function InputPage() {
     savedTimer.current = setTimeout(() => setJustSaved(false), 900);
 
     setAmountRaw("");
+    // Clear and collapse every time — a note left behind would land on the next expense.
+    setNote("");
+    setNoteOpen(false);
     amountRef.current?.focus();
+  }
+
+  function openNote() {
+    setNoteOpen(true);
+    // The input mounts on this render; focus it once it exists.
+    requestAnimationFrame(() => noteRef.current?.focus());
   }
 
   /** Fire-and-forget like the save — never awaited (Global Constraints). */
@@ -186,16 +202,17 @@ export default function InputPage() {
           data-testid="last-logged"
           className="mt-3 flex items-center justify-between rounded-xl bg-surface px-3 py-2 shadow-sm"
         >
-          <p className="text-xs text-ink-muted">
+          <p className="min-w-0 truncate text-xs text-ink-muted">
             Last:{" "}
             <span className="font-semibold text-ink">
               {formatPHP(lastLogged.amount)} · {lastLogged.categoryName}
             </span>
+            {lastLogged.note ? <> · {lastLogged.note}</> : null}
           </p>
           <button
             type="button"
             onClick={handleUndo}
-            className="text-xs font-bold text-brand"
+            className="ml-3 shrink-0 text-xs font-bold text-brand"
           >
             Undo
           </button>
@@ -218,6 +235,33 @@ export default function InputPage() {
 
       <div className="mt-6">
         <CategoryChips categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
+      </div>
+
+      {/* Optional note — opt-in, so the no-note log costs no extra tap and the field takes no space until asked for. */}
+      <div className="mt-3">
+        {noteOpen ? (
+          <input
+            ref={noteRef}
+            aria-label="Note"
+            placeholder="Add a note (optional)"
+            maxLength={EXPENSE_NOTE_MAX_LENGTH}
+            enterKeyHint="done"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave();
+            }}
+            className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-sm outline-none"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={openNote}
+            className="rounded-full px-3 py-2 text-sm font-medium text-brand"
+          >
+            + Note
+          </button>
+        )}
       </div>
 
       <div className="mt-auto space-y-3 pb-4 pt-6">

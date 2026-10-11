@@ -11,6 +11,7 @@ import {
   type Query,
 } from "firebase/firestore";
 import { getDb, HOUSEHOLD_ID } from "@/lib/firebase";
+import { normalizeNote } from "@/lib/note";
 import type { NewExpense } from "@/types";
 
 function expensesCol(periodId: string): CollectionReference {
@@ -40,7 +41,7 @@ export function addExpense(
     amount: expense.amount,
     categoryId: expense.categoryId,
     date: expense.date ? Timestamp.fromDate(expense.date) : serverTimestamp(),
-    note: expense.note?.trim() ?? null,
+    note: normalizeNote(expense.note),
     createdAt: serverTimestamp(),
   }).catch((error: unknown) => {
     onError?.(error);
