@@ -253,7 +253,7 @@ export default function InputPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSave();
             }}
-            className="w-full rounded-xl border border-line bg-surface px-3 py-3 text-sm outline-none"
+            className="w-full rounded-xl border border-line bg-surface px-3 py-3 outline-none"
           />
         ) : (
           <button

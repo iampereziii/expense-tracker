@@ -31,6 +31,22 @@ const ROUTES = [
 const NAV_TAB_COUNT = 5;
 
 test.describe("app shell at the specified breakpoint", () => {
+  test("every rendered input and select computes to 16px or more (no iOS focus-zoom)", async ({ page }) => {
+    for (const route of ROUTES) {
+      await page.goto(route);
+      // The note field is collapsed behind "+ Note" until asked for.
+      const addNote = page.getByRole("button", { name: "+ Note" });
+      if (await addNote.count()) await addNote.click();
+
+      const sizes = await page
+        .locator("input, select, textarea")
+        .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
+      for (const size of sizes) {
+        expect(size, `${route} has a form control under 16px`).toBeGreaterThanOrEqual(16);
+      }
+    }
+  });
+
   test("bottom nav exposes every route with AA-sized targets", async ({ page }) => {
     await page.goto("/");
 

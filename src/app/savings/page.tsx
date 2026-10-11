@@ -209,7 +209,7 @@ export default function SavingsPage() {
                           aria-label={`Move from ${pot.name} to`}
                           value={moveTargetId}
                           onChange={(e) => setMoveTargetId(e.target.value)}
-                          className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 text-sm outline-none"
+                          className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 outline-none"
                         >
                           <option value="">Move to…</option>
                           {others.map((other) => (

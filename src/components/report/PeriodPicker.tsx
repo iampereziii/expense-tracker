@@ -28,7 +28,7 @@ export function PeriodPicker({
       aria-label="Budget period"
       value={selectedId}
       onChange={(e) => onSelect(e.target.value)}
-      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm outline-none"
+      className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none"
     >
       {periods.map((p) => (
         <option key={p.id} value={p.id}>
