@@ -29,7 +29,9 @@ function allocationsCol(): CollectionReference {
 
 /** Active pots, oldest first. */
 export function activePotsQuery(): Query {
-  return query(potsCol(), where("archived", "==", false), orderBy("createdAt", "asc"));
+  // No orderBy: with the archived filter it would need a composite index (see
+  // lib/order.ts). The hook sorts by createdAt instead.
+  return query(potsCol(), where("archived", "==", false));
 }
 
 /** The whole ledger, newest first — pot balances are summed from this. */

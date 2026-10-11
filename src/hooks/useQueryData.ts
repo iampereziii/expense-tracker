@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onSnapshot, type Query, type DocumentData } from "firebase/firestore";
+import {
+  onSnapshot,
+  type Query,
+  type DocumentData,
+  type SnapshotOptions,
+} from "firebase/firestore";
 
 /**
  * Subscribe to a Firestore query and return typed docs ({ id, ...data }).
@@ -11,6 +16,8 @@ import { onSnapshot, type Query, type DocumentData } from "firebase/firestore";
 export function useQueryData<T>(
   makeQuery: () => Query | null,
   deps: ReadonlyArray<unknown>,
+  /** e.g. `{ serverTimestamps: "estimate" }` to read a pending serverTimestamp as the local time. */
+  snapshotOptions?: SnapshotOptions,
 ): { data: T[]; loading: boolean } {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +34,20 @@ export function useQueryData<T>(
       q,
       (snap) => {
         setData(
-          snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })) as T[],
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data(snapshotOptions) as DocumentData),
+          })) as T[],
         );
         setLoading(false);
       },
-      () => setLoading(false),
+      (error) => {
+        // A rejected listener is dead: the screen keeps its last data and silently
+        // stops updating until a reload. Never swallow this — it's how a missing
+        // composite index hid for so long.
+        console.error("Firestore listener stopped:", error);
+        setLoading(false);
+      },
     );
     return unsub;
     // eslint-disable-next-line react-hooks/exhaustive-deps

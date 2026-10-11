@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useQueryData } from "./useQueryData";
+import { sortByCreatedAt } from "@/lib/order";
 import { activePotsQuery, allocationsQuery } from "@/services/savings";
 import { potBalances, sumPotBalances } from "@/lib/savings";
 import type { Allocation, SavingsPot } from "@/types";
@@ -17,15 +18,19 @@ export function useSavingsPots(enabled: boolean): {
   potTotal: number;
   loading: boolean;
 } {
-  const { data: pots, loading: potsLoading } = useQueryData<SavingsPot>(
+  const { data: potDocs, loading: potsLoading } = useQueryData<SavingsPot>(
     () => (enabled ? activePotsQuery() : null),
     [enabled],
+    // Pending createdAt reads as the local time, so a just-added item sorts last
+    // instead of landing in doc-id order (lib/order.ts sorts client-side).
+    { serverTimestamps: "estimate" },
   );
   const { data: allocations, loading: ledgerLoading } = useQueryData<Allocation>(
     () => (enabled ? allocationsQuery() : null),
     [enabled],
   );
 
+  const pots = useMemo(() => sortByCreatedAt(potDocs), [potDocs]);
   const balances = useMemo(() => potBalances(allocations), [allocations]);
   // Archived pots keep their entries, so sum the visible pots rather than the whole
   // ledger — otherwise savings main would stay reduced by a pot that's no longer shown.

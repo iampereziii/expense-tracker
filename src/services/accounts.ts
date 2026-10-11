@@ -2,7 +2,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   setDoc,
   updateDoc,
   doc,
@@ -21,9 +20,11 @@ function accountsCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "accounts");
 }
 
-/** Active accounts for the balance flows, oldest first. */
+/** Active accounts for the balance flows. Unordered — see useAccounts. */
 export function activeAccountsQuery(): Query {
-  return query(accountsCol(), where("archived", "==", false), orderBy("createdAt", "asc"));
+  // No orderBy: with the archived filter it would need a composite index (see
+  // lib/order.ts). The hook sorts by createdAt instead.
+  return query(accountsCol(), where("archived", "==", false));
 }
 
 /** Not awaited (see fireAndForget) — the row appears from the local cache at once. */
