@@ -6,6 +6,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { addCategory, archiveCategory, renameCategory } from "@/services/categories";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { WRITE_ERROR_MESSAGE } from "@/lib/constants";
 
 export default function CategoriesPage() {
   const { user, ready, configured } = useAuth();
@@ -13,37 +14,43 @@ export default function CategoriesPage() {
   const { categories } = useCategories(enabled);
 
   const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const onSyncError = () => setSyncError(WRITE_ERROR_MESSAGE);
 
-  async function handleAdd() {
+  // Writes are never awaited: the list re-renders from the local cache straight
+  // away, online or off. Awaiting would block on the server's acknowledgement.
+  function handleAdd() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setBusy(true);
-    try {
-      await addCategory(trimmed);
-      setName("");
-    } finally {
-      setBusy(false);
-    }
+    setSyncError(null);
+    addCategory(trimmed, undefined, onSyncError);
+    setName("");
   }
 
-  async function handleRename(id: string, current: string) {
+  function handleRename(id: string, current: string) {
     const next = window.prompt("Rename category", current);
     if (next && next.trim() && next.trim() !== current) {
-      await renameCategory(id, next.trim());
+      setSyncError(null);
+      renameCategory(id, next.trim(), onSyncError);
     }
   }
 
-  async function handleArchive(id: string, label: string) {
+  function handleArchive(id: string, label: string) {
     // Archive, not delete — past expenses keep resolving this category (Rule 7).
     if (window.confirm(`Remove "${label}"? It stays on past expenses, just hidden here.`)) {
-      await archiveCategory(id);
+      setSyncError(null);
+      archiveCategory(id, onSyncError);
     }
   }
 
   return (
     <section className="pt-6">
       <h1 className="text-lg font-semibold">Categories</h1>
+      {syncError ? (
+        <p role="alert" className="mt-3 text-sm text-danger-fg">
+          {syncError}
+        </p>
+      ) : null}
 
       <Card tone="sunken" className="mt-4">
         <div className="flex gap-2">
@@ -53,7 +60,7 @@ export default function CategoriesPage() {
             onChange={(e) => setName(e.target.value)}
             className="flex-1 rounded-xl border border-line px-3 py-3 outline-none"
           />
-          <Button onClick={handleAdd} disabled={busy || !name.trim()}>
+          <Button onClick={handleAdd} disabled={!name.trim()}>
             Add
           </Button>
         </div>
