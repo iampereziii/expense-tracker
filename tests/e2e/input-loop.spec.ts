@@ -92,6 +92,23 @@ test.describe("fast expense input", () => {
     await expect(page.getByLabel("Note")).toHaveValue("x".repeat(80));
   });
 
+  test("fits on one screen with Save above the nav", async ({ page }) => {
+    await page.goto("/");
+    const save = page.getByRole("button", { name: "Save" });
+    await expect(save).toBeVisible();
+
+    // No vertical scroll: the page is exactly the space above the nav.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+
+    // Save sits wholly above the fixed nav — nothing to scroll out from under.
+    const saveBox = await save.boundingBox();
+    const navBox = await page.locator("nav").boundingBox();
+    expect(saveBox!.y + saveBox!.height).toBeLessThanOrEqual(navBox!.y);
+  });
+
   test("shows budget progress under the header", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("budget-progress")).toBeVisible();

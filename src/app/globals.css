@@ -56,9 +56,21 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * Bottom-nav geometry, defined once. NavBar sizes itself from --nav-h and the
+ * Log screen subtracts the same numbers, so the two can't drift apart and push
+ * Save under the nav again.
+ */
+:root {
+  --nav-h: 3.875rem;
+  --nav-gap: 1.25rem;
+  /* Space left for a page above the nav (and the iPhone home-indicator strip). */
+  --app-h: calc(100dvh - var(--nav-h) - var(--nav-gap) - env(safe-area-inset-bottom));
+}
+
 /* Keep content clear of the fixed bottom nav. */
 main {
-  padding-bottom: 5rem;
+  padding-bottom: calc(var(--nav-h) + var(--nav-gap) + env(safe-area-inset-bottom));
 }
 
 /* Prevent iOS zoom on focus for the amount field. This — not `maximumScale: 1`

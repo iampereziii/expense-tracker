@@ -157,11 +157,11 @@ export default function InputPage() {
     period && period.budgetAmount > 0 ? Math.min(total / period.budgetAmount, 1) : 0;
 
   return (
-    // `dvh`, not `vh`: with the native keyboard open (ADR-0003) a `100vh` box
-    // keeps its full height, so `mt-auto` pushes Save down behind the keyboard.
-    // The dynamic viewport shrinks instead, keeping Save in thumb reach — which
-    // is the single biggest determinant of the ≤5s one-handed loop.
-    <section className="flex min-h-[100dvh] flex-col pt-4">
+    // Exactly the space above the nav (`--app-h`, globals.css), not `min-h-[100dvh]`:
+    // a full-screen section plus main's nav padding made the page taller than the
+    // screen, parking Save under the fixed nav behind a scroll. Fixed height keeps
+    // Save pinned just above the nav. `dvh`, not `vh`, per ADR-0003.
+    <section className="flex h-[var(--app-h)] flex-col pt-4">
       {/* Standing — total + remaining, visible the moment you save (Rule, F1 story 2). */}
       <header className="flex items-center justify-between">
         <div>
@@ -233,7 +233,9 @@ export default function InputPage() {
         <p className="mt-1 text-center text-sm text-ink-muted">{formatPHP(amount)}</p>
       </div>
 
-      <div className="mt-6">
+      {/* Two rows of chips, plus a sliver of the third so it's visible there's more to
+          scroll to. Extra categories scroll here instead of pushing Save down. */}
+      <div className="mt-6 max-h-[6.25rem] shrink-0 overflow-y-auto">
         <CategoryChips categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
       </div>
 
