@@ -3,7 +3,7 @@ import {
   query,
   where,
   orderBy,
-  addDoc,
+  setDoc,
   updateDoc,
   doc,
   serverTimestamp,
@@ -15,6 +15,7 @@ import {
 import { getDb, HOUSEHOLD_ID } from "@/lib/firebase";
 import { roundCentavos } from "@/lib/money";
 import type { AccountType } from "@/types";
+import { fireAndForget, type WriteErrorHandler } from "./write";
 
 function accountsCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "accounts");
@@ -25,20 +26,26 @@ export function activeAccountsQuery(): Query {
   return query(accountsCol(), where("archived", "==", false), orderBy("createdAt", "asc"));
 }
 
-export async function addAccount(name: string, type: AccountType): Promise<void> {
-  await addDoc(accountsCol(), {
-    name: name.trim(),
-    type,
-    balance: 0,
-    archived: false,
-    declaredAt: null,
-    declaredBy: null,
-    createdAt: serverTimestamp(),
-  });
+/** Not awaited (see fireAndForget) — the row appears from the local cache at once. */
+export function addAccount(name: string, type: AccountType, onError?: WriteErrorHandler): string {
+  const ref = doc(accountsCol());
+  fireAndForget(
+    setDoc(ref, {
+      name: name.trim(),
+      type,
+      balance: 0,
+      archived: false,
+      declaredAt: null,
+      declaredBy: null,
+      createdAt: serverTimestamp(),
+    }),
+    onError,
+  );
+  return ref.id;
 }
 
-export async function renameAccount(id: string, name: string): Promise<void> {
-  await updateDoc(doc(accountsCol(), id), { name: name.trim() });
+export function renameAccount(id: string, name: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(accountsCol(), id), { name: name.trim() }), onError);
 }
 
 /**
@@ -46,12 +53,13 @@ export async function renameAccount(id: string, name: string): Promise<void> {
  * is declared becomes that cutoff's frozen snapshot. `declaredAt`/`declaredBy` make a
  * last-write-wins clobber between the two devices explainable after the fact.
  */
-export async function setAccountBalance(
+export function setAccountBalance(
   id: string,
   balance: number,
   uid: string | null,
-): Promise<void> {
-  await updateDoc(doc(accountsCol(), id), balanceUpdate(balance, uid));
+  onError?: WriteErrorHandler,
+): void {
+  fireAndForget(updateDoc(doc(accountsCol(), id), balanceUpdate(balance, uid)), onError);
 }
 
 /** Same write, staged into the declaration batch so a reviewed adjustment isn't lost. */
@@ -74,6 +82,6 @@ function balanceUpdate(balance: number, uid: string | null) {
 }
 
 /** Soft-remove (Rule 7): drops out of the balance flows, historical snapshots survive. */
-export async function archiveAccount(id: string): Promise<void> {
-  await updateDoc(doc(accountsCol(), id), { archived: true });
+export function archiveAccount(id: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(accountsCol(), id), { archived: true }), onError);
 }

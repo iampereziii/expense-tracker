@@ -4,6 +4,7 @@ import {
   where,
   orderBy,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -14,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { getDb, HOUSEHOLD_ID } from "@/lib/firebase";
 import { SEED_CATEGORIES, DEFAULT_CATEGORY_COLOR } from "@/lib/constants";
+import { fireAndForget, type WriteErrorHandler } from "./write";
 
 function categoriesCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "categories");
@@ -28,22 +30,35 @@ export function activeCategoriesQuery(): Query {
   );
 }
 
-export async function addCategory(name: string, color = DEFAULT_CATEGORY_COLOR): Promise<void> {
-  await addDoc(categoriesCol(), {
-    name: name.trim(),
-    color,
-    archived: false,
-    createdAt: serverTimestamp(),
-  });
+/**
+ * Not awaited (see fireAndForget): the chip appears from the local cache at once,
+ * online or off. Pre-generated ref so the caller gets the id synchronously.
+ */
+export function addCategory(
+  name: string,
+  color = DEFAULT_CATEGORY_COLOR,
+  onError?: WriteErrorHandler,
+): string {
+  const ref = doc(categoriesCol());
+  fireAndForget(
+    setDoc(ref, {
+      name: name.trim(),
+      color,
+      archived: false,
+      createdAt: serverTimestamp(),
+    }),
+    onError,
+  );
+  return ref.id;
 }
 
-export async function renameCategory(id: string, name: string): Promise<void> {
-  await updateDoc(doc(categoriesCol(), id), { name: name.trim() });
+export function renameCategory(id: string, name: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(categoriesCol(), id), { name: name.trim() }), onError);
 }
 
 /** Soft-remove (Rule 7): hide from the input row but keep resolvable for history. */
-export async function archiveCategory(id: string): Promise<void> {
-  await updateDoc(doc(categoriesCol(), id), { archived: true });
+export function archiveCategory(id: string, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(categoriesCol(), id), { archived: true }), onError);
 }
 
 /** Seed Food/Bills on first run if the household has no categories yet. */

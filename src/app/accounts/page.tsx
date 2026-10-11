@@ -14,6 +14,7 @@ import { AmountField } from "@/components/ui/AmountField";
 import { Card } from "@/components/ui/Card";
 import { MoneySwitch } from "@/components/MoneySwitch";
 import { formatPHP, parseAmount } from "@/lib/money";
+import { WRITE_ERROR_MESSAGE } from "@/lib/constants";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import type { Account, AccountType } from "@/types";
 
@@ -29,21 +30,20 @@ export default function AccountsPage() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<AccountType>("bank");
-  const [busy, setBusy] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const onSyncError = () => setSyncError(WRITE_ERROR_MESSAGE);
   /** Which account's balance is open for editing, and its in-progress raw value. */
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRaw, setEditRaw] = useState("");
 
-  async function handleAdd() {
+  // Writes are never awaited: the list re-renders from the local cache straight
+  // away, online or off. Awaiting would block on the server's acknowledgement.
+  function handleAdd() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setBusy(true);
-    try {
-      await addAccount(trimmed, type);
-      setName("");
-    } finally {
-      setBusy(false);
-    }
+    setSyncError(null);
+    addAccount(trimmed, type, onSyncError);
+    setName("");
   }
 
   function startEdit(account: Account) {
@@ -51,28 +51,31 @@ export default function AccountsPage() {
     setEditRaw(account.balance ? String(account.balance) : "");
   }
 
-  async function saveEdit(account: Account) {
+  function saveEdit(account: Account) {
     const next = parseAmount(editRaw);
     setEditingId(null);
     if (next === account.balance) return;
-    await setAccountBalance(account.id, next, user?.uid ?? null);
+    setSyncError(null);
+    setAccountBalance(account.id, next, user?.uid ?? null, onSyncError);
   }
 
-  async function handleRename(account: Account) {
+  function handleRename(account: Account) {
     const next = window.prompt("Rename account", account.name);
     if (next && next.trim() && next.trim() !== account.name) {
-      await renameAccount(account.id, next.trim());
+      setSyncError(null);
+      renameAccount(account.id, next.trim(), onSyncError);
     }
   }
 
-  async function handleArchive(account: Account) {
+  function handleArchive(account: Account) {
     // Archive, not delete — past cutoff snapshots keep pointing at this account (Rule 7).
     if (
       window.confirm(
         `Remove "${account.name}"? Past cutoff snapshots keep it, it just leaves this list.`,
       )
     ) {
-      await archiveAccount(account.id);
+      setSyncError(null);
+      archiveAccount(account.id, onSyncError);
     }
   }
 
@@ -86,6 +89,11 @@ export default function AccountsPage() {
       <p className="mt-1 text-sm text-ink-muted">
         Where your money actually sits. Tap a balance to update it anytime.
       </p>
+      {syncError ? (
+        <p role="alert" className="mt-3 text-sm text-danger-fg">
+          {syncError}
+        </p>
+      ) : null}
 
       <Card tone="sunken" className="mt-4">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Total savings</p>
@@ -172,7 +180,7 @@ export default function AccountsPage() {
             </Button>
           ))}
         </div>
-        <Button onClick={handleAdd} disabled={busy || !name.trim()} className="w-full">
+        <Button onClick={handleAdd} disabled={!name.trim()} className="w-full">
           Add account
         </Button>
       </Card>
