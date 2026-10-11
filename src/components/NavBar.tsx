@@ -57,10 +57,20 @@ const TABS: readonly Tab[] = [
     ),
   },
   {
+    href: "/report",
+    label: "Report",
+    isActive: (p) => p.startsWith("/report"),
+    icon: (
+      <svg {...ICON_PROPS} aria-hidden>
+        <path d="M3 3v18h18" />
+        <path d="M7 15v3M12 10v8M17 6v12" />
+      </svg>
+    ),
+  },
+  {
     href: "/more",
     label: "More",
-    isActive: (p) =>
-      p.startsWith("/more") || p.startsWith("/categories") || p.startsWith("/report"),
+    isActive: (p) => p.startsWith("/more") || p.startsWith("/categories"),
     icon: (
       <svg {...ICON_PROPS} aria-hidden>
         <circle cx="5" cy="12" r="1" fill="currentColor" />
@@ -71,11 +81,12 @@ const TABS: readonly Tab[] = [
   },
 ];
 
-/** Fixed bottom nav — 4 tabs, icon + 11px label, soft pill behind the active icon. */
+/** Fixed bottom nav — 5 tabs, icon + 11px label, soft pill behind the active icon. */
 export function NavBar() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 grid h-[calc(var(--nav-h)+env(safe-area-inset-bottom))] grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-10 grid h-[calc(var(--nav-h)+env(safe-area-inset-bottom))] grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
+
       {TABS.map((t) => {
         const active = t.isActive(pathname);
         return (
@@ -88,7 +99,7 @@ export function NavBar() {
             }`}
           >
             <span
-              className={`rounded-full px-4 py-0.5 transition-colors motion-reduce:transition-none ${
+              className={`rounded-full px-3 py-0.5 transition-colors motion-reduce:transition-none ${
                 active ? "bg-brand-soft" : ""
               }`}
             >

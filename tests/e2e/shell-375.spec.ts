@@ -16,7 +16,7 @@ import { test, expect } from "@playwright/test";
 const AA_TARGET_MIN_PX = 24;
 
 /** All navigable routes — used for horizontal-scroll regression. Includes deep-linked
- *  pages (/savings, /categories, /report) that aren't nav targets but must not scroll. */
+ *  pages (/savings, /categories) that aren't nav targets but must not scroll. */
 const ROUTES = [
   "/",
   "/periods",
@@ -27,8 +27,8 @@ const ROUTES = [
   "/more",
 ] as const;
 
-/** Number of anchors rendered in the bottom nav (Log / Budget / Money / More). */
-const NAV_TAB_COUNT = 4;
+/** Number of anchors rendered in the bottom nav (Log / Budget / Money / Report / More). */
+const NAV_TAB_COUNT = 5;
 
 test.describe("app shell at the specified breakpoint", () => {
   test("bottom nav exposes every route with AA-sized targets", async ({ page }) => {

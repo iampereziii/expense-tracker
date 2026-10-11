@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 
-/** Small static hub for the rarely-touched screens (Report joins when unparked). */
+/** Small static hub for the rarely-touched screens (Report has its own tab). */
 export default function MorePage() {
   return (
     <section className="pt-6">

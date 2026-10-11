@@ -49,6 +49,13 @@ export function addCategory(
   return ref.id;
 }
 
+/** Every category, archived included — for history/report, where past expenses must
+ *  still resolve an archived category's name and colour (Rule 7). Unordered like
+ *  activeCategoriesQuery; useAllCategories sorts client-side (lib/order.ts). */
+export function allCategoriesQuery(): Query {
+  return query(categoriesCol());
+}
+
 export function renameCategory(id: string, name: string, onError?: WriteErrorHandler): void {
   fireAndForget(updateDoc(doc(categoriesCol(), id), { name: name.trim() }), onError);
 }
