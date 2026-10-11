@@ -2,7 +2,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   addDoc,
   setDoc,
   updateDoc,
@@ -21,13 +20,11 @@ function categoriesCol(): CollectionReference {
   return collection(getDb(), "households", HOUSEHOLD_ID, "categories");
 }
 
-/** Active (non-archived) categories for the input chip row, oldest first. */
+/** Active (non-archived) categories for the input chip row. Unordered — see useCategories. */
 export function activeCategoriesQuery(): Query {
-  return query(
-    categoriesCol(),
-    where("archived", "==", false),
-    orderBy("createdAt", "asc"),
-  );
+  // No orderBy: with the archived filter it would need a composite index (see
+  // lib/order.ts). The hook sorts by createdAt instead.
+  return query(categoriesCol(), where("archived", "==", false));
 }
 
 /**
