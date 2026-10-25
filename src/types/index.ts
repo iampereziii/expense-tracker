@@ -34,6 +34,9 @@ export interface Period {
   incomeAmount?: number | null;
   /** Free-text breakdown alongside `incomeAmount`. */
   incomeNote?: string | null;
+  /** Inherit the previous period's remainder (lib/budget.ts). Only the choice is stored —
+   *  the amount is derived. Absent = legacy period = no carry. */
+  carryOver?: boolean;
   createdAt: Timestamp;
 }
 

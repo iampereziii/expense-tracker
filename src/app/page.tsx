@@ -6,12 +6,15 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useActivePeriod } from "@/hooks/useActivePeriod";
 import { useCategories } from "@/hooks/useCategories";
 import { useExpenses } from "@/hooks/useExpenses";
+import { usePeriods } from "@/hooks/usePeriods";
+import { useEffectiveBudget } from "@/hooks/useEffectiveBudget";
 import { CategoryChips } from "@/components/input/CategoryChips";
 import { Button } from "@/components/ui/Button";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { addExpense, deleteExpense } from "@/services/expenses";
 import { formatPHP, parseAmount, sanitizeAmountInput } from "@/lib/money";
 import { EXPENSE_NOTE_MAX_LENGTH, normalizeNote } from "@/lib/note";
+import { describeCarry } from "@/lib/budget";
 
 interface LastLogged {
   id: string;
@@ -29,6 +32,9 @@ export default function InputPage() {
   const { period, loading: periodLoading } = useActivePeriod(enabled);
   const { categories } = useCategories(enabled);
   const { total } = useExpenses(period?.id ?? null);
+  // Carry-over from the previous period, if this one opted in (lib/budget.ts).
+  const { periods } = usePeriods(enabled);
+  const budget = useEffectiveBudget(periods, period?.id ?? null);
 
   const [amountRaw, setAmountRaw] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -61,7 +67,7 @@ export default function InputPage() {
   }, [categories, categoryId]);
 
   const amount = parseAmount(amountRaw);
-  const remaining = period ? period.budgetAmount - total : 0;
+  const remaining = period ? budget.total - total : 0;
   const canSave = enabled && !!period && !!categoryId && amount > 0;
 
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -154,7 +160,7 @@ export default function InputPage() {
   }
 
   const spentFraction =
-    period && period.budgetAmount > 0 ? Math.min(total / period.budgetAmount, 1) : 0;
+    budget.total > 0 ? Math.min(total / budget.total, 1) : total > 0 ? 1 : 0;
 
   return (
     // Exactly the space above the nav (`--app-h`, globals.css), not `min-h-[100dvh]`:
@@ -175,8 +181,13 @@ export default function InputPage() {
         <div className="text-right">
           <SyncIndicator />
           <p className="mt-1 text-xs text-ink-muted">
-            Spent {formatPHP(total)} of {formatPHP(period.budgetAmount)}
+            Spent {formatPHP(total)} of {formatPHP(budget.total)}
           </p>
+          {budget.carried !== 0 ? (
+            <p data-testid="carried" className="text-xs text-ink-muted">
+              {describeCarry(budget.carried, formatPHP)}
+            </p>
+          ) : null}
         </div>
       </header>
 

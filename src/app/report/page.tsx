@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { usePeriods } from "@/hooks/usePeriods";
 import { useAllCategories } from "@/hooks/useAllCategories";
 import { useExpenses } from "@/hooks/useExpenses";
+import { useEffectiveBudget } from "@/hooks/useEffectiveBudget";
 import { deleteExpense } from "@/services/expenses";
 import { Card } from "@/components/ui/Card";
 import { SyncIndicator } from "@/components/SyncIndicator";
@@ -21,6 +22,7 @@ import {
   toReportRow,
   type ReportRow,
 } from "@/lib/report";
+import { describeCarry } from "@/lib/budget";
 import type { Category } from "@/types";
 
 /**
@@ -49,6 +51,7 @@ export default function ReportPage() {
   const isOpen = period?.endDate === null;
 
   const { expenses, loading: expensesLoading } = useExpenses(period?.id ?? null);
+  const budget = useEffectiveBudget(periods, period?.id ?? null);
 
   const categoriesById = useMemo(
     () => new Map<string, Category>(categories.map((c) => [c.id, c])),
@@ -100,7 +103,7 @@ export default function ReportPage() {
     );
   }
 
-  const status = period ? budgetStatus(spent, period.budgetAmount) : null;
+  const status = period ? budgetStatus(spent, budget.total) : null;
   const filteredName = categoryFilter ? categoriesById.get(categoryFilter)?.name : null;
 
   return (
@@ -118,9 +121,14 @@ export default function ReportPage() {
           <p className="text-xs uppercase tracking-wide text-ink-muted">Spent</p>
           <p className="text-3xl font-bold tabular-nums">{formatPHP(spent)}</p>
           <p className="mt-1 text-xs text-ink-muted">
-            of {formatPHP(period.budgetAmount)} budget · {rows.length}{" "}
+            of {formatPHP(budget.total)} budget · {rows.length}{" "}
             {rows.length === 1 ? "expense" : "expenses"}
           </p>
+          {budget.carried !== 0 ? (
+            <p className="text-xs text-ink-muted">
+              {formatPHP(budget.base)} budget · {describeCarry(budget.carried, formatPHP)}
+            </p>
+          ) : null}
           {status.over > 0 ? (
             <p className="mt-2 text-sm font-semibold text-danger-fg">
               {formatPHP(status.over)} over budget

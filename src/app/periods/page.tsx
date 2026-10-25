@@ -5,7 +5,9 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useQueryData } from "@/hooks/useQueryData";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useSavingsPots } from "@/hooks/useSavingsPots";
-import { allPeriodsQuery, declarePeriod } from "@/services/periods";
+import { allPeriodsQuery, declarePeriod, setCarryOver } from "@/services/periods";
+import { useCarryOut, useEffectiveBudget } from "@/hooks/useEffectiveBudget";
+import { describeCarry } from "@/lib/budget";
 import type { SnapshotInput } from "@/services/balances";
 import { Button } from "@/components/ui/Button";
 import { AmountField } from "@/components/ui/AmountField";
@@ -30,6 +32,8 @@ export default function PeriodsPage() {
   const [budget, setBudget] = useState("");
   const [income, setIncome] = useState("");
   const [note, setNote] = useState("");
+  /** Off by default — the user decides whether this period continues the last one's month. */
+  const [carry, setCarry] = useState(false);
   /** Only accounts the user actually retyped land here — unchanged ones cost zero typing. */
   const [balanceEdits, setBalanceEdits] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -40,6 +44,12 @@ export default function PeriodsPage() {
 
   const activePeriod = periods[0] && periods[0].endDate === null ? periods[0] : null;
   const lastClosed = periods[1] ?? null;
+
+  // A new period would carry from the newest one; the newest itself may carry from the one before.
+  const newest = periods[0] ?? null;
+  const carryAvailable = useCarryOut(periods, newest?.id ?? null);
+  const newestBudget = useEffectiveBudget(periods, newest?.id ?? null);
+  const plannedBudget = parseAmount(budget);
 
   function balanceValue(accountId: string, liveBalance: number): string {
     return balanceEdits[accountId] ?? (liveBalance ? String(liveBalance) : "");
@@ -69,11 +79,13 @@ export default function PeriodsPage() {
         incomeNote: note,
         balances,
         pots,
+        carryOver: carry && !!newest,
         uid: user?.uid ?? null,
       });
       setBudget("");
       setIncome("");
       setNote("");
+      setCarry(false);
       setBalanceEdits({});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't start the period");
@@ -101,6 +113,36 @@ export default function PeriodsPage() {
           onChange={setBudget}
           className="w-full"
         />
+        {/* Carry-over (lib/budget.ts) — only when there's a period to carry from. Off by
+            default: the user knows whether this cutoff continues the last one's month. */}
+        {newest ? (
+          <div className="rounded-xl bg-surface p-3">
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>
+                Carry over{" "}
+                <span className="tabular-nums text-ink-muted">
+                  {describeCarry(carryAvailable, formatPHP)}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={carry}
+                onChange={(e) => setCarry(e.target.checked)}
+                className="h-5 w-5 shrink-0 accent-brand"
+              />
+            </label>
+            {carry ? (
+              <p data-testid="carry-preview" className="mt-2 text-xs tabular-nums text-ink-muted">
+                {formatPHP(plannedBudget)} {carryAvailable < 0 ? "−" : "+"}{" "}
+                {formatPHP(Math.abs(carryAvailable))} ={" "}
+                <span className="font-semibold text-ink">
+                  {formatPHP(plannedBudget + carryAvailable)}
+                </span>{" "}
+                to spend
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <AmountField
           label="Income amount"
           placeholder="Income amount (optional)"
@@ -181,21 +223,49 @@ export default function PeriodsPage() {
 
       <Card className="mt-3">
         <ul className="divide-y divide-line">
-          {periods.map((period) => {
+          {periods.map((period, index) => {
             const open = period.endDate === null;
+            // Only the newest period's carry-over can be fixed after declaring; older
+            // ones are history (brief, Risks #6). The oldest has nothing to carry from.
+            const editableCarry = index === 0 && periods.length > 1;
             return (
               <li
                 key={period.id}
                 className="flex items-center justify-between px-0 py-3 first:pt-0 last:pb-0"
               >
                 <div>
-                  <p className="font-medium">{formatPHP(period.budgetAmount)}</p>
+                  <p className="font-medium">
+                    {formatPHP(index === 0 ? newestBudget.total : period.budgetAmount)}
+                  </p>
+                  {index === 0 && newestBudget.carried !== 0 ? (
+                    <p className="text-xs text-ink-muted">
+                      {formatPHP(newestBudget.base)} budget ·{" "}
+                      {describeCarry(newestBudget.carried, formatPHP)}
+                    </p>
+                  ) : index > 0 && period.carryOver ? (
+                    <p className="text-xs text-ink-muted">Carried over from last period</p>
+                  ) : null}
                   <p className="text-xs text-ink-muted">
                     {period.incomeAmount
                       ? `${formatPHP(period.incomeAmount)} income`
                       : "No income declared"}
                     {period.incomeNote ? ` · ${period.incomeNote}` : ""}
                   </p>
+                  {editableCarry ? (
+                    <label className="mt-1 flex items-center gap-2 text-xs text-ink-muted">
+                      <input
+                        type="checkbox"
+                        checked={period.carryOver === true}
+                        onChange={(e) =>
+                          setCarryOver(period.id, e.target.checked, () =>
+                            setError("Couldn't update carry-over. Try again."),
+                          )
+                        }
+                        className="h-4 w-4 accent-brand"
+                      />
+                      Carry over from last period
+                    </label>
+                  ) : null}
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
