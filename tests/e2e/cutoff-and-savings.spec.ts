@@ -75,4 +75,34 @@ test.describe("cutoff declaration and savings allocation", () => {
     await expect(page.getByText("₱1,500.00")).toBeVisible();
     await expect(page.getByText("₱3,000.00")).toBeHidden();
   });
+
+  test("carries the remainder into the next period only when asked", async ({ page }) => {
+    // First half of the month: ₱10,000 budget, ₱8,760 logged → ₱1,240 left.
+    await page.goto("/periods");
+    await page.getByLabel("Budget amount").fill("10000");
+    await page.getByRole("button", { name: "Start new period" }).click();
+    await page.goto("/");
+    await page.getByLabel("Amount").fill("8760");
+    await page.getByRole("group", { name: "Category" }).getByRole("button").first().click();
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // Second half: the toggle starts off; turning it on previews 10,000 + 1,240.
+    await page.goto("/periods");
+    await page.getByLabel("Budget amount").fill("10000");
+    const carry = page.getByRole("checkbox", { name: /Carry over/ }).first();
+    await expect(carry).not.toBeChecked();
+    await carry.check();
+    await expect(page.getByTestId("carry-preview")).toContainText("₱11,240.00");
+    await page.getByRole("button", { name: "Start new period" }).click();
+
+    await page.goto("/");
+    await expect(page.getByText("₱11,240.00").first()).toBeVisible();
+    await expect(page.getByTestId("carried")).toHaveText("+₱1,240.00 from last period");
+
+    // Forgot-to-flip fix: unticking on the newest period drops the carry at once.
+    await page.goto("/periods");
+    await page.getByRole("checkbox", { name: "Carry over from last period" }).uncheck();
+    await page.goto("/");
+    await expect(page.getByTestId("carried")).toHaveCount(0);
+  });
 });

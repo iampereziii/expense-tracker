@@ -6,6 +6,7 @@ import {
   limit,
   doc,
   getDocs,
+  updateDoc,
   writeBatch,
   serverTimestamp,
   Timestamp,
@@ -17,6 +18,7 @@ import { roundCentavos } from "@/lib/money";
 import { stageAccountBalance } from "./accounts";
 import { stageBalanceSnapshots, type SnapshotInput } from "./balances";
 import { stageIncomeAllocations } from "./savings";
+import { fireAndForget, type WriteErrorHandler } from "./write";
 import type { SavingsPot } from "@/types";
 
 function periodsCol(): CollectionReference {
@@ -50,6 +52,8 @@ export interface PeriodDeclaration {
   balances?: ReadonlyArray<SnapshotInput>;
   /** Pots whose percentage rules apply to `incomeAmount`. */
   pots?: ReadonlyArray<SavingsPot>;
+  /** Inherit the closing period's remainder. Defaults to false — the user decides. */
+  carryOver?: boolean;
   /** Device uid for the balance audit fields. */
   uid?: string | null;
 }
@@ -88,6 +92,7 @@ export async function declarePeriod(declaration: PeriodDeclaration): Promise<str
     budgetAmount: declaration.budgetAmount,
     incomeAmount,
     incomeNote: declaration.incomeNote?.trim() ? declaration.incomeNote.trim() : null,
+    carryOver: declaration.carryOver === true,
     createdAt: serverTimestamp(),
   });
 
@@ -105,4 +110,14 @@ export async function declarePeriod(declaration: PeriodDeclaration): Promise<str
 
   await batch.commit();
   return periodRef.id;
+}
+
+/**
+ * Flip carry-over on the newest period after declaring, for when the toggle was
+ * forgotten (brief, Risks #6). Only the flag moves — the amount is re-derived — so this
+ * is safe to change. Callers offer it on the newest period only; older periods are
+ * history. Not awaited (see fireAndForget), so it works offline.
+ */
+export function setCarryOver(periodId: string, carryOver: boolean, onError?: WriteErrorHandler): void {
+  fireAndForget(updateDoc(doc(periodsCol(), periodId), { carryOver }), onError);
 }
